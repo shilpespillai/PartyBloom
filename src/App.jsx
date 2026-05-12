@@ -28,6 +28,8 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { db, auth } from './firebase';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { 
   collection, 
   onSnapshot, 
@@ -775,8 +777,29 @@ const Scanner = ({ onScan }) => {
     let mockInt = null;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { alpha: false });
+    const isNative = Capacitor.isNativePlatform();
 
-    async function startCamera() {
+    async function startNativeScanner() {
+      try {
+        const { camera } = await BarcodeScanner.checkPermissions();
+        if (camera !== 'granted') await BarcodeScanner.requestPermissions();
+        
+        const listener = await BarcodeScanner.addListener('barcodeScanned', (event) => {
+          if (isScanning) {
+            isScanning = false;
+            onScan(event.barcode.displayValue);
+          }
+        });
+
+        await BarcodeScanner.startScan();
+        setHasCamera(true);
+      } catch (e) {
+        console.error("Native scanner init failed:", e);
+        startWebScanner(); 
+      }
+    }
+
+    async function startWebScanner() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
@@ -792,7 +815,6 @@ const Scanner = ({ onScan }) => {
           videoRef.current.srcObject = stream;
           setHasCamera(true);
 
-          // Deep Hardware Focus Lock
           const track = stream.getVideoTracks()[0];
           const capabilities = track.getCapabilities?.() || {};
           
@@ -804,17 +826,14 @@ const Scanner = ({ onScan }) => {
                   pointsOfInterest: { x: 0.5, y: 0.5 }
                 }]
               };
-              // SUPER-CLARITY ZOOM: Force 1.5x or 2.0x default zoom if possible
               if (capabilities.zoom) {
                 const targetZoom = Math.min(2.0, capabilities.zoom.max);
                 constraints.advanced[0].zoom = targetZoom;
-                console.log("Applying Super-Zoom:", targetZoom);
               }
               await track.applyConstraints(constraints);
             } catch (e) { console.warn("Lens adjustment failed:", e); }
           }
           
-          // --- Hardware Focus Heartbeat (Force lens to seek every 2s) ---
           const forceFocus = async () => {
             if (!track || track.readyState !== 'live') return;
             try {
@@ -864,41 +883,46 @@ const Scanner = ({ onScan }) => {
             requestAnimationFrame(scanLoop);
           };
           requestAnimationFrame(scanLoop);
-        } else {
-          console.warn("BarcodeDetector not supported in this browser.");
-          // We don't alert here to avoid annoying the user, but the UI will show manual options
         }
       } catch (err) {
-        console.error("Camera error:", err);
+        console.error("Web Camera error:", err);
       }
     }
-    // Mock recognition loop
+
+    if (isNative) {
+      startNativeScanner();
+    } else {
+      startWebScanner();
+    }
+
     mockInt = setInterval(() => {
       if (!isScanning) return;
       setIsDetected(prev => !prev);
     }, 800);
 
-    startCamera();
     return () => {
       isScanning = false;
       if (focusInt) clearInterval(focusInt);
       if (mockInt) clearInterval(mockInt);
-      if (stream) {
-        stream.getTracks().forEach(t => t.stop());
-      }
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      if (isNative) BarcodeScanner.stopScan().catch(() => {});
     };
   }, []);
 
+  const isNative = Capacitor.isNativePlatform();
+
   return (
-    <div className="relative w-full h-full bg-black overflow-hidden">
-      {/* Real Camera Feed */}
-      <video 
-        ref={videoRef} 
-        autoPlay 
-        muted
-        playsInline 
-        className="absolute inset-0 w-full h-full object-cover contrast-[1.2] brightness-[1.05] saturate-[1.1]"
-      />
+    <div className={`relative w-full h-full overflow-hidden ${isNative ? 'bg-transparent' : 'bg-black'}`}>
+      {/* Real Camera Feed (Web Fallback only) */}
+      {!isNative && (
+        <video 
+          ref={videoRef} 
+          autoPlay 
+          muted
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover contrast-[1.2] brightness-[1.05] saturate-[1.1]"
+        />
+      )}
       
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         {/* Clean Rectangular Frame with Pulsating Heartbeat */}
