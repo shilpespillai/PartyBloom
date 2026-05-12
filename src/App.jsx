@@ -926,91 +926,122 @@ const MarketMapScreen = ({ onBack }) => {
 };
 
 const Pantry = ({ items, onItemClick }) => {
-  const goodItems = items.filter(i => i.score >= 50);
-  const badItems = items.filter(i => i.score < 50);
+  const [search, setSearch] = useState('');
+  
+  const filtered = items.filter(i => 
+    i.name.toLowerCase().includes(search.toLowerCase()) || 
+    i.brand.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const goodItems = filtered.filter(i => i.score >= 50);
+  const badItems = filtered.filter(i => i.score < 50);
 
   return (
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
-      className="px-4 py-8 pb-32"
+      className="px-6 py-8 pb-32 bg-[#FDFCF7]"
     >
-      <div className="flex justify-between items-center mb-12 px-2">
-        <h1 className="text-3xl text-stone-800 font-serif">My Pantry</h1>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-serif-luxury text-stone-800">My Pantry</h1>
+          <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-1">Managed Inventory</p>
+        </div>
         <button 
           onClick={onItemClick ? () => onItemClick({ isNew: true, name: '', brand: '', score: 75, icon: '📦' }) : null}
-          className="p-3 bg-sage text-white rounded-2xl shadow-lg active:scale-90 transition-transform"
+          className="w-12 h-12 bg-sage text-white rounded-2xl shadow-lg flex items-center justify-center active:scale-90 transition-transform"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-6 h-6" />
         </button>
       </div>
 
-      {/* Top Shelf: Good Food */}
-      <div className="wooden-shelf">
-        <div className="shelf-label">The Good Stuff</div>
-        <div className="grid grid-cols-2 gap-4">
-          {goodItems.map((item, idx) => (
-            <motion.div 
-              key={idx} 
-              whileHover={{ y: -5 }}
-              onClick={() => onItemClick({ ...item, inPantry: true })}
-              className="bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all relative"
-            >
-              {(() => {
-                const d = new Date(item.expiryDate);
-                const days = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
-                if (days <= 7) {
-                  return (
-                    <div className="absolute top-2 right-2 w-5 h-5 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-pulse z-10 border-2 border-white">
-                      !!
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-              {item.image ? (
-                <div className="w-12 h-12 mb-2 rounded-lg overflow-hidden bg-white/50">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
-                </div>
-              ) : (
-                <span className="text-3xl mb-2">{item.icon}</span>
-              )}
-              <p className="text-[10px] font-bold text-stone-800 truncate w-full">{item.name}</p>
-              <p className="text-[8px] text-stone-400 font-bold uppercase">{item.expiryDate}</p>
-              <div className="mt-2 w-full h-1 bg-stone-50 rounded-full overflow-hidden">
-                <div className="h-full bg-sage" style={{ width: `${item.score}%` }} />
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      {/* Search Bar */}
+      <div className="relative mb-10">
+        <input 
+          type="text"
+          placeholder="Search your pantry..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-white border border-stone-100 rounded-2xl py-4 px-6 text-sm shadow-sm outline-none focus:border-sage transition-all pl-12"
+        />
+        <Leaf className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300" />
       </div>
 
-      {/* Bottom Shelf: Junky Food */}
-      <div className="wooden-shelf mt-20">
-        <div className="shelf-label bg-terracotta">The Vices</div>
-        <div className="grid grid-cols-2 gap-4 opacity-80">
-          {badItems.map((item, idx) => (
-            <motion.div 
-              key={idx} 
-              whileHover={{ y: -5 }}
-              onClick={() => onItemClick(item)}
-              className="bg-white/60 p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all"
-            >
-              {item.image ? (
-                <div className="w-12 h-12 mb-2 rounded-lg overflow-hidden bg-white/50 grayscale-[0.3]">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-contain opacity-80" />
-                </div>
-              ) : (
-                <span className="text-3xl mb-2 grayscale">{item.icon}</span>
-              )}
-              <p className="text-[10px] font-bold text-stone-800 truncate w-full">{item.name}</p>
-              <p className="text-[8px] text-terracotta font-bold uppercase">{item.expiryDate}</p>
-              <div className="mt-2 w-full h-1 bg-stone-50 rounded-full overflow-hidden">
-                <div className="h-full bg-terracotta" style={{ width: `${item.score}%` }} />
-              </div>
-            </motion.div>
-          ))}
+      {/* Optimal Selection */}
+      {goodItems.length > 0 && (
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6 px-1">
+            <h2 className="text-sm font-bold text-stone-800 uppercase tracking-widest">Optimal Selection</h2>
+            <div className="h-px flex-1 bg-stone-100" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {goodItems.map((item, idx) => (
+              <PantryCard key={idx} item={item} onClick={() => onItemClick({ ...item, inPantry: true })} />
+            ))}
+          </div>
         </div>
+      )}
+
+      {/* Audit Required */}
+      {badItems.length > 0 && (
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6 px-1">
+            <h2 className="text-sm font-bold text-terracotta uppercase tracking-widest">Audit Required</h2>
+            <div className="h-px flex-1 bg-stone-100" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {badItems.map((item, idx) => (
+              <PantryCard key={idx} item={item} onClick={() => onItemClick({ ...item, inPantry: true })} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {filtered.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-stone-300">
+          <ShoppingBag className="w-12 h-12 mb-4 opacity-20" />
+          <p className="font-bold">No items found</p>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+const PantryCard = ({ item, onClick }) => {
+  const d = new Date(item.expiryDate);
+  const days = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+  const isExpiring = days <= 7;
+
+  return (
+    <motion.div 
+      whileHover={{ y: -5 }}
+      onClick={onClick}
+      className="bg-white p-3 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all relative group"
+    >
+      {isExpiring && (
+        <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+      )}
+      
+      <div className="w-full aspect-square mb-3 rounded-2xl bg-stone-50 overflow-hidden flex items-center justify-center relative group-hover:bg-cream transition-colors">
+        {item.image ? (
+          <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2" />
+        ) : (
+          <span className="text-4xl">{item.icon}</span>
+        )}
+        <div className="absolute inset-x-0 bottom-0 h-1 bg-stone-100">
+           <div className={`h-full ${item.score > 70 ? 'bg-sage' : item.score > 40 ? 'bg-wood' : 'bg-terracotta'}`} style={{ width: `${item.score}%` }} />
+        </div>
+      </div>
+      
+      <p className="text-[11px] font-bold text-stone-800 truncate w-full px-1">{item.name}</p>
+      <p className="text-[8px] text-stone-400 font-bold uppercase tracking-tighter mt-1">{item.brand}</p>
+      
+      <div className="mt-3 flex items-center gap-1.5">
+         <span className={`text-[9px] font-bold ${item.score > 70 ? 'text-sage' : 'text-stone-500'}`}>Score: {item.score}</span>
+         <div className="w-1 h-1 rounded-full bg-stone-200" />
+         <span className={`text-[8px] font-bold ${isExpiring ? 'text-red-500' : 'text-stone-300'}`}>
+           {isExpiring ? 'Expiring' : 'Safe'}
+         </span>
       </div>
     </motion.div>
   );
