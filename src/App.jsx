@@ -858,6 +858,7 @@ const App = () => {
           expiryDate: new Date().toLocaleDateString()
         });
       }
+      }
     } catch (err) {
       console.error("API Lookup Error:", err);
       // Network/Fetch error fallback
@@ -872,7 +873,15 @@ const App = () => {
   };
 
   const addToPantry = (item) => {
-    setPantryItems([item, ...pantryItems]);
+    setPantryItems(prev => {
+      const exists = prev.find(p => p.id === item.id);
+      if (exists) {
+        // Update existing item
+        return prev.map(p => p.id === item.id ? item : p);
+      }
+      // Add new item
+      return [item, ...prev];
+    });
     setScannedItem(null);
     setCurrentScreen('pantry');
   };
