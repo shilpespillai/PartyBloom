@@ -566,6 +566,24 @@ const Scanner = ({ onScan }) => {
               await track.applyConstraints(constraints);
             } catch (e) { console.warn("Lens adjustment failed:", e); }
           }
+          
+          // --- Hardware Focus Heartbeat (Force lens to seek every 2s) ---
+          const forceFocus = async () => {
+            if (!track || track.readyState !== 'live') return;
+            try {
+              const caps = track.getCapabilities();
+              if (caps.focusMode) {
+                await track.applyConstraints({
+                  advanced: [{ 
+                    focusMode: caps.focusMode.includes('continuous') ? 'continuous' : 'manual',
+                    pointsOfInterest: { x: 0.5, y: 0.5 }
+                  }]
+                });
+              }
+            } catch (e) { /* ignore */ }
+          };
+          const fInt = setInterval(forceFocus, 2000);
+          forceFocus();
         }
 
         if ('BarcodeDetector' in window) {
@@ -584,7 +602,7 @@ const Scanner = ({ onScan }) => {
 
                 canvas.width = scanWidth;
                 canvas.height = scanHeight;
-                ctx.filter = 'contrast(1.4) grayscale(1) brightness(1.1) sharpness(1.2)';
+                ctx.filter = 'contrast(2.0) grayscale(1) brightness(1.2)';
                 ctx.drawImage(video, startX, startY, scanWidth, scanHeight, 0, 0, scanWidth, scanHeight);
 
                 const barcodes = await detector.detect(canvas);
