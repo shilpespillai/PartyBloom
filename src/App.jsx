@@ -365,9 +365,10 @@ const FilteredListView = ({ title, filter, items, onBack }) => {
   );
 };
 
-const Dashboard = ({ healthScore, onSelectCategory, onShowMarket }) => {
+const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState('Just now');
+  const { healthScore, cleanPercent, junkyPercent, expiringCount } = stats;
 
   const handleSync = () => {
     setIsSyncing(true);
@@ -419,37 +420,42 @@ const Dashboard = ({ healthScore, onSelectCategory, onShowMarket }) => {
             Excellent
           </div>
         </div>
-      </div>
-
-    <div className="px-6 grid grid-cols-3 gap-3 mt-6">
+      </d    <div className="px-6 grid grid-cols-3 gap-3 mt-6">
       <button onClick={() => onSelectCategory('clean', 'Clean Food')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
         <div className="w-12 h-12 mb-2">
            <ResponsiveContainer width="100%" height="100%">
              <PieChart>
-               <Pie data={[{value: 84}, {value: 16}]} innerRadius={15} outerRadius={22} dataKey="value">
-                 <Cell fill="#5D6D3F" /><Cell fill="#D27D56" />
+               <Pie data={[{value: cleanPercent}, {value: 100 - cleanPercent}]} innerRadius={15} outerRadius={22} dataKey="value">
+                 <Cell fill="#5D6D3F" /><Cell fill="#f5f5f4" />
                </Pie>
              </PieChart>
            </ResponsiveContainer>
         </div>
-        <p className="text-lg font-bold text-stone-800">84%</p>
+        <p className="text-lg font-bold text-stone-800">{cleanPercent}%</p>
         <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Clean Food</p>
       </button>
       
       <button onClick={() => onSelectCategory('junky', 'Junky Food')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
-        <div className="w-12 h-12 mb-2 flex items-center justify-center bg-red-50 rounded-full">
-           <AlertCircle className="w-6 h-6 text-terracotta" />
+        <div className="w-12 h-12 mb-2">
+           <ResponsiveContainer width="100%" height="100%">
+             <PieChart>
+               <Pie data={[{value: junkyPercent}, {value: 100 - junkyPercent}]} innerRadius={15} outerRadius={22} dataKey="value">
+                 <Cell fill="#D27D56" /><Cell fill="#f5f5f4" />
+               </Pie>
+             </PieChart>
+           </ResponsiveContainer>
         </div>
-        <p className="text-lg font-bold text-stone-800">16%</p>
+        <p className="text-lg font-bold text-stone-800">{junkyPercent}%</p>
         <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1 text-terracotta">Junky</p>
       </button>
-
+ 
       <button onClick={() => onSelectCategory('expiring', 'Expiring Soon')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
         <Timer className="w-8 h-8 text-terracotta mb-4" />
-        <p className="text-lg font-bold text-stone-800">3</p>
+        <p className="text-lg font-bold text-stone-800">{expiringCount}</p>
         <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Expiring</p>
       </button>
     </div>
+div>
 
   </motion.div>
   );
@@ -492,7 +498,9 @@ const HistoryScreen = () => (
   </motion.div>
 );
 
-const Stats = ({ onSelectCategory }) => (
+const Stats = ({ stats, onSelectCategory }) => {
+  const { distData } = stats;
+  return (
   <motion.div 
     initial={{ opacity: 0 }} 
     animate={{ opacity: 1 }} 
@@ -506,19 +514,15 @@ const Stats = ({ onSelectCategory }) => (
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={[
-                { name: 'Good', value: 65, color: '#5D6D3F' },
-                { name: 'Fair', value: 20, color: '#A67B5B' },
-                { name: 'Poor', value: 15, color: '#D27D56' }
-              ]}
+              data={distData}
               innerRadius={60}
               outerRadius={80}
               paddingAngle={8}
               dataKey="value"
             >
-              <Cell fill="#5D6D3F" />
-              <Cell fill="#A67B5B" />
-              <Cell fill="#D27D56" />
+              {distData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
             </Pie>
           </PieChart>
         </ResponsiveContainer>
@@ -933,9 +937,9 @@ const Pantry = ({ items, onItemClick }) => {
 const App = () => {
   const [currentScreen, setCurrentScreen] = useState('dashboard');
   const [scannedItem, setScannedItem] = useState(null);
-  const [healthScore, setHealthScore] = useState(74);
-  const [activeCategory, setActiveCategory] = useState(null); // { id, title }
+  const [activeCategory, setActiveCategory] = useState(null);
   const [showMarket, setShowMarket] = useState(false);
+  const [user, setUser] = useState(null);
 
   // 1. Initialize from LocalStorage or default
   const [pantryItems, setPantryItems] = useState(() => {
@@ -1036,8 +1040,35 @@ const App = () => {
   const handleScan = async (scannedData) => {
     const barcode = scannedData.code || scannedData; // Handle both direct string or object
     
-    // 1. Show loading state if needed (optional)
-    console.log("Looking up barcode:", barcode);
+  // --- Dynamic Stats Engine ---
+  const stats = React.useMemo(() => {
+    const total = pantryItems.length || 1;
+    const clean = pantryItems.filter(i => i.score >= 70);
+    const junky = pantryItems.filter(i => i.score < 40);
+    const fair = pantryItems.filter(i => i.score >= 40 && i.score < 70);
+    
+    // Calculate Days
+    const getDays = (dateStr) => {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return 999;
+      return Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+    };
+    
+    const expiring = pantryItems.filter(i => getDays(i.expiryDate) <= 7);
+    const scoreSum = pantryItems.reduce((acc, i) => acc + (i.score || 0), 0);
+    
+    return {
+      healthScore: Math.round(scoreSum / (pantryItems.length || 1)),
+      cleanPercent: Math.round((clean.length / total) * 100),
+      junkyPercent: Math.round((junky.length / total) * 100),
+      expiringCount: expiring.length,
+      distData: [
+        { name: 'Good', value: clean.length, color: '#5D6D3F' },
+        { name: 'Fair', value: fair.length, color: '#A67B5B' },
+        { name: 'Poor', value: junky.length, color: '#D27D56' }
+      ]
+    };
+  }, [pantryItems]);
 
     try {
       // 2. Real API Lookup (Open Food Facts - No API Key required for simple GET)
@@ -1138,14 +1169,14 @@ const App = () => {
           <AnimatePresence mode="wait">
             {currentScreen === 'dashboard' && (
               <Dashboard 
-                healthScore={healthScore} 
+                stats={stats} 
                 onSelectCategory={(id, title) => setActiveCategory({ id, title })}
                 onShowMarket={() => setShowMarket(true)}
                 key="dashboard" 
               />
             )}
             {currentScreen === 'history' && <HistoryScreen key="history" />}
-            {currentScreen === 'stats' && <Stats onSelectCategory={(id, title) => setActiveCategory({ id, title })} key="stats" />}
+            {currentScreen === 'stats' && <Stats stats={stats} onSelectCategory={(id, title) => setActiveCategory({ id, title })} key="stats" />}
             {currentScreen === 'scanner' && <Scanner onScan={handleScan} key="scanner" />}
             {currentScreen === 'pantry' && <Pantry items={pantryItems} onItemClick={(item) => setScannedItem(item)} key="pantry" />}
           </AnimatePresence>
