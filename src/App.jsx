@@ -471,9 +471,10 @@ const Scanner = ({ onScan }) => {
         stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: 'environment',
+            aspectRatio: { ideal: 1.7777777778 }, // 16:9 for better barcode visibility
             width: { ideal: 1280 },
             height: { ideal: 720 },
-            frameRate: { ideal: 60 } // High framerate for "Yuka" snap
+            frameRate: { ideal: 60 }
           } 
         });
         
@@ -482,7 +483,7 @@ const Scanner = ({ onScan }) => {
           setHasCamera(true);
         }
 
-        // Industrial Grade Scanner Engine (simulated with optimized BarcodeDetector loop + ZXing logic)
+        // Industrial Grade Scanner Engine
         if ('BarcodeDetector' in window) {
           const detector = new BarcodeDetector({ formats: ['ean_13', 'upc_a', 'code_128', 'code_39'] });
           
@@ -494,10 +495,7 @@ const Scanner = ({ onScan }) => {
                 if (barcodes.length > 0) {
                   isScanning = false;
                   setIsDetected(true);
-                  
-                  // Haptic Feedback (Vibration) - The "Yuka" snap feel
                   if ('vibrate' in navigator) navigator.vibrate(50);
-                  
                   setTimeout(() => {
                     onScan(barcodes[0].rawValue);
                   }, 400);
@@ -530,17 +528,25 @@ const Scanner = ({ onScan }) => {
         ref={videoRef} 
         autoPlay 
         playsInline 
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover grayscale-[0.3] contrast-[1.2]"
       />
       
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className={`w-64 h-64 border-4 rounded-[3rem] relative overflow-hidden transition-colors duration-300 ${isDetected ? 'border-sage shadow-[0_0_30px_rgba(93,109,63,0.5)]' : 'border-white/30'}`}>
+        {/* Rectangular Scanner Frame (better for barcodes) */}
+        <div className={`w-[85%] h-40 border-4 rounded-[2rem] relative overflow-hidden transition-all duration-300 ${isDetected ? 'border-sage shadow-[0_0_40px_rgba(93,109,63,0.6)]' : 'border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.1)]'}`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(93,109,63,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
+          
           <motion.div 
-            animate={{ y: isDetected ? 128 : [0, 256, 0] }}
-            transition={{ duration: isDetected ? 0.2 : 3, repeat: isDetected ? 0 : Infinity, ease: "linear" }}
-            className={`w-full h-1 absolute z-10 ${isDetected ? 'bg-sage scale-x-110 shadow-[0_0_20px_#5D6D3F]' : 'bg-white/50 shadow-[0_0_15px_rgba(255,255,255,0.5)]'}`} 
+            animate={{ y: isDetected ? 80 : [0, 160, 0] }}
+            transition={{ duration: isDetected ? 0.2 : 2.5, repeat: isDetected ? 0 : Infinity, ease: "easeInOut" }}
+            className={`w-full h-1 absolute z-10 ${isDetected ? 'bg-sage shadow-[0_0_20px_#5D6D3F]' : 'bg-white/60 shadow-[0_0_15px_rgba(255,255,255,0.5)]'}`} 
           />
+          
+          {/* Corner Brackets for visual focus */}
+          <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-white/20 rounded-tl-lg" />
+          <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-white/20 rounded-tr-lg" />
+          <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-white/20 rounded-bl-lg" />
+          <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-white/20 rounded-br-lg" />
         </div>
       </div>
 
