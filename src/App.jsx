@@ -69,6 +69,31 @@ const AuditCard = ({ item, onDismiss, onAdd }) => {
   const [manualDate, setManualDate] = useState('');
   const [viewDetails, setViewDetails] = useState(false);
 
+  const getAlternative = (item) => {
+    // If the product is already clean (Score > 80), don't suggest a swap
+    if (item.score > 80) return { name: 'Top Tier Choice!', reason: 'This product already meets our highest clean-label standards.' };
+
+    const name = item.name.toLowerCase();
+    const brand = (item.brand || '').toLowerCase();
+
+    if (name.includes('sauce') || name.includes('tomato')) {
+      if (brand.includes('rao')) return { name: 'Cucina Antica', reason: 'Another premium, no-sugar alternative' };
+      return { name: 'Rao\'s Homemade', reason: 'No added sugar or seed oils' };
+    }
+    
+    if (name.includes('mayo')) {
+      if (brand.includes('chosen') || brand.includes('primal')) return { name: 'Homemade Mayo', reason: 'The ultimate clean-label hack' };
+      return { name: 'Chosen Foods Mayo', reason: '100% Pure Avocado Oil' };
+    }
+
+    if (name.includes('cookie') || name.includes('biscuit')) return { name: 'Simple Mills', reason: 'Nut-based, low glycemic' };
+    if (name.includes('oil')) return { name: 'Chosen Foods Avocado Oil', reason: 'High smoke point, heart healthy' };
+    
+    return { name: 'Organic Local Choice', reason: 'Minimally processed alternative' };
+  };
+
+  const alt = getAlternative(item);
+
   return (
     <motion.div 
       initial={{ y: 300 }}
@@ -159,8 +184,8 @@ const AuditCard = ({ item, onDismiss, onAdd }) => {
         <p className="text-xs font-bold text-sage uppercase mb-3 tracking-widest">Better Alternative</p>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold text-stone-800 text-sm">Chosen Foods Mayo</p>
-            <p className="text-[10px] text-stone-400 font-bold uppercase">100% Pure Avocado Oil</p>
+            <p className="font-bold text-stone-800 text-sm">{alt.name}</p>
+            <p className="text-[10px] text-stone-400 font-bold uppercase">{alt.reason}</p>
           </div>
           <button className="text-sage font-bold text-xs flex items-center gap-1">
             Shop <ChevronRight className="w-4 h-4" />
@@ -742,45 +767,43 @@ const App = () => {
   const [activeCategory, setActiveCategory] = useState(null); // { id, title }
   const [showMarket, setShowMarket] = useState(false);
 
-  const [pantryItems, setPantryItems] = useState([
-    { 
-      name: 'Organic Black Beans', 
-      brand: 'Eden Foods', 
-      score: 95, 
-      status: 'Excellent', 
-      icon: '🥫', 
-      expiryDate: 'Oct 12, 2026',
-      ingredients: 'Organic Black Beans, Water, Sea Salt.',
-      oils: 'None',
-      sugar: '0g',
-      additives: []
-    },
-    { 
-      name: 'Chocolate Chip Cookies', 
-      brand: 'Chips Ahoy', 
-      score: 32, 
-      status: 'Poor', 
-      icon: '🍪', 
-      expiry: '2 days', 
-      expiryDate: 'May 14, 2026',
-      ingredients: 'Unbleached Enriched Flour, High Fructose Corn Syrup, Palm Oil, Sugar, Semisweet Chocolate Chips, Artificial Flavor.',
-      oils: 'Palm Oil',
-      sugar: '11g',
-      additives: ['High Fructose Corn Syrup', 'Artificial Flavor']
-    },
-    { 
-      name: 'Almond Butter', 
-      brand: 'Barney Butter', 
-      score: 92, 
-      status: 'Excellent', 
-      icon: '🥜', 
-      expiryDate: 'Jun 22, 2026',
-      ingredients: 'Blanched Roasted Almonds, Cane Sugar, Palm Fruit Oil, Sea Salt.',
-      oils: 'Palm Fruit Oil',
-      sugar: '3g',
-      additives: []
-    }
-  ]);
+  // 1. Initialize from LocalStorage or default
+  const [pantryItems, setPantryItems] = useState(() => {
+    const saved = localStorage.getItem('pantry_bloom_items');
+    if (saved) return JSON.parse(saved);
+    return [
+      { 
+        name: 'Organic Black Beans', 
+        brand: 'Eden Foods', 
+        score: 95, 
+        status: 'Excellent', 
+        icon: '🥫', 
+        expiryDate: 'Oct 12, 2026',
+        ingredients: 'Organic Black Beans, Water, Sea Salt.',
+        oils: 'None',
+        sugar: '0g',
+        additives: []
+      },
+      { 
+        name: 'Chocolate Chip Cookies', 
+        brand: 'Chips Ahoy', 
+        score: 32, 
+        status: 'Poor', 
+        icon: '🍪', 
+        expiry: '2 days', 
+        expiryDate: 'May 14, 2026',
+        ingredients: 'Unbleached Enriched Flour, High Fructose Corn Syrup, Palm Oil, Sugar, Semisweet Chocolate Chips, Artificial Flavor.',
+        oils: 'Palm Oil',
+        sugar: '11g',
+        additives: ['High Fructose Corn Syrup', 'Artificial Flavor']
+      }
+    ];
+  });
+
+  // 2. Persist to LocalStorage whenever items change
+  useEffect(() => {
+    localStorage.setItem('pantry_bloom_items', JSON.stringify(pantryItems));
+  }, [pantryItems]);
 
   const handleScan = async (scannedData) => {
     const barcode = scannedData.code || scannedData; // Handle both direct string or object
