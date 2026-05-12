@@ -470,15 +470,8 @@ const Scanner = ({ onScan }) => {
                 const barcodes = await detector.detect(videoRef.current);
                 if (barcodes.length > 0) {
                   clearInterval(interval);
-                  // Simulate an audit for any scanned barcode
-                  onScan({ 
-                    name: 'Scanned Product', 
-                    brand: 'Local Pantry', 
-                    nova: 3, 
-                    oils: 'Healthy', 
-                    sugar: 'Low', 
-                    score: 82 
-                  });
+                  // Pass the actual scanned barcode ID to the lookup engine
+                  onScan(barcodes[0].rawValue);
                 }
               } catch (e) { /* ignore */ }
             }
@@ -529,9 +522,9 @@ const Scanner = ({ onScan }) => {
           {hasCamera ? 'Point at a barcode to audit' : 'Requesting camera...'}
         </p>
         
-        {/* Shutter Button (Manual Override) */}
+        {/* Shutter Button (Manual Override for testing) */}
         <button 
-          onClick={() => onScan({ name: 'Hellmann\'s Mayo', nova: 4, oils: 'Inflammatory', sugar: 'Hidden', score: 32 })}
+          onClick={() => onScan('048001213501')}
           className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-8 border-white/20 active:scale-95 transition-all shadow-2xl"
         >
           <div className="w-12 h-12 bg-stone-800 rounded-full" />
@@ -738,16 +731,52 @@ const App = () => {
     }
   ]);
 
-  const handleScan = (item) => {
-    // Merge full technical data if missing (simulating database lookup)
-    const enrichedItem = {
-      ...item,
-      id: Date.now(),
-      expiryDate: new Date(Date.now() + 1000*60*60*24*30).toLocaleDateString(), // Default 30 days
-      ingredients: item.ingredients || 'Detailed ingredients from barcode database...',
-      nutrition: { cal: '120', fat: '8g', sugar: item.sugar || '2g' }
-    };
-    setScannedItem(enrichedItem);
+  const handleScan = async (scannedData) => {
+    const barcode = scannedData.code || scannedData; // Handle both direct string or object
+    
+    // 1. Show loading state if needed (optional)
+    console.log("Looking up barcode:", barcode);
+
+    try {
+      // 2. Real API Lookup (Open Food Facts - No API Key required for simple GET)
+      const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+      const data = await response.json();
+
+      if (data.status === 1) {
+        const p = data.product;
+        // 3. Map real data to our "Boutique" format
+        const realItem = {
+          id: Date.now(),
+          name: p.product_name || 'Unknown Product',
+          brand: p.brands || 'Generic Brand',
+          score: p.nutriscore_score !== undefined ? (100 - (p.nutriscore_score * 2)) : 70, // Simple conversion
+          nova: p.nova_group || 3,
+          icon: '📦',
+          ingredients: p.ingredients_text || 'Ingredients not found in database.',
+          oils: (p.ingredients_text?.toLowerCase().includes('oil')) ? 'Oils Found' : 'Clean',
+          sugar: p.nutriments?.sugars_serving ? `${p.nutriments.sugars_serving}g` : 'Unknown',
+          nutrition: {
+            cal: Math.round(p.nutriments?.['energy-kcal_serving'] || 0),
+            fat: p.nutriments?.fat_serving || 0,
+            sugar: p.nutriments?.sugars_serving || 0
+          },
+          expiryDate: new Date(Date.now() + 1000*60*60*24*30).toLocaleDateString()
+        };
+        setScannedItem(realItem);
+      } else {
+        // Fallback for demo products or unrecognized items
+        setScannedItem({
+          name: 'Boutique Product',
+          brand: 'New Discovery',
+          score: 85,
+          nova: 1,
+          ingredients: 'Fresh organic ingredients...',
+          expiryDate: new Date().toLocaleDateString()
+        });
+      }
+    } catch (err) {
+      console.error("API Lookup Error:", err);
+    }
   };
 
   const addToPantry = (item) => {
