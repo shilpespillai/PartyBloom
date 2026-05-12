@@ -131,8 +131,29 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
         <div className="flex-1">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-bold mb-1">{item.name}</h2>
-              <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{item.brand}</p>
+              {item.isNew ? (
+                <div className="space-y-2">
+                  <input 
+                    type="text" 
+                    placeholder="Product Name" 
+                    className="text-2xl font-bold mb-1 w-full border-b border-stone-200 outline-none focus:border-sage"
+                    defaultValue={item.name !== 'Unknown Product' ? item.name : ''}
+                    onChange={(e) => item.name = e.target.value}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Brand (optional)" 
+                    className="text-xs font-bold text-stone-400 uppercase tracking-widest w-full border-b border-stone-100 outline-none focus:border-sage"
+                    defaultValue={item.brand?.startsWith('Scan Result') ? '' : item.brand}
+                    onChange={(e) => item.brand = e.target.value}
+                  />
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold mb-1">{item.name}</h2>
+                  <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{item.brand}</p>
+                </>
+              )}
             </div>
             <button onClick={onDismiss} className="p-2 bg-stone-50 rounded-full text-stone-400 hover:bg-stone-100 transition-colors">
               <X className="w-5 h-5" />
@@ -839,7 +860,12 @@ const Pantry = ({ items, onItemClick }) => {
     >
       <div className="flex justify-between items-center mb-12 px-2">
         <h1 className="text-4xl text-stone-800 font-serif">My Pantry</h1>
-        <button className="p-3 bg-sage text-white rounded-2xl shadow-lg"><Plus className="w-5 h-5" /></button>
+        <button 
+          onClick={onItemClick ? () => onItemClick({ isNew: true, name: '', brand: '', score: 75, icon: '📦' }) : null}
+          className="p-3 bg-sage text-white rounded-2xl shadow-lg active:scale-90 transition-transform"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Top Shelf: Good Food */}
