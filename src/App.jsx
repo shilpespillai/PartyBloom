@@ -506,8 +506,12 @@ const FilteredListView = ({ title, filter, items, onBack }) => {
       <div className="space-y-4 overflow-y-auto h-[calc(100%-100px)] custom-scrollbar">
         {filteredItems.length > 0 ? filteredItems.map((item, idx) => (
           <div key={idx} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex items-center gap-4">
-            <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center text-2xl">
-              {item.icon || '📦'}
+            <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center text-2xl overflow-hidden">
+              {item.image ? (
+                <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+              ) : (
+                item.icon || '📦'
+              )}
             </div>
             <div className="flex-1">
               <p className="font-bold text-stone-800 text-sm">{item.name}</p>
