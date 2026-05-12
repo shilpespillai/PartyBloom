@@ -517,16 +517,20 @@ const Scanner = ({ onScan }) => {
   useEffect(() => {
     let stream = null;
     let isScanning = true;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
 
     async function startCamera() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: 'environment',
-            aspectRatio: { ideal: 1.7777777778 }, // 16:9 for better barcode visibility
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            frameRate: { ideal: 60 }
+            aspectRatio: { ideal: 1.7777777778 },
+            width: { ideal: 1920, min: 1280 }, // Requesting Full HD for crisp barcodes
+            height: { ideal: 1080, min: 720 },
+            frameRate: { ideal: 60 },
+            focusMode: { ideal: 'continuous' }, // Force lens to stay locked
+            whiteBalanceMode: { ideal: 'continuous' }
           } 
         });
         
@@ -535,15 +539,30 @@ const Scanner = ({ onScan }) => {
           setHasCamera(true);
         }
 
-        // Industrial Grade Scanner Engine
         if ('BarcodeDetector' in window) {
           const detector = new BarcodeDetector({ formats: ['ean_13', 'upc_a', 'code_128', 'code_39'] });
           
           const scanLoop = async () => {
             if (!isScanning) return;
-            if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+            const video = videoRef.current;
+            
+            if (video && video.readyState === video.HAVE_ENOUGH_DATA) {
               try {
-                const barcodes = await detector.detect(videoRef.current);
+                // Optical Pre-Processing: 
+                // We crop only the scanning area to boost speed and apply filters to help the AI "see"
+                const scanWidth = video.videoWidth * 0.8;
+                const scanHeight = video.videoHeight * 0.3;
+                const startX = (video.videoWidth - scanWidth) / 2;
+                const startY = (video.videoHeight - scanHeight) / 2;
+
+                canvas.width = scanWidth;
+                canvas.height = scanHeight;
+                
+                // Boost contrast and sharpen for the AI
+                ctx.filter = 'contrast(1.4) grayscale(1) brightness(1.1) sharpness(1.2)';
+                ctx.drawImage(video, startX, startY, scanWidth, scanHeight, 0, 0, scanWidth, scanHeight);
+
+                const barcodes = await detector.detect(canvas);
                 if (barcodes.length > 0) {
                   isScanning = false;
                   setIsDetected(true);
@@ -580,21 +599,28 @@ const Scanner = ({ onScan }) => {
         ref={videoRef} 
         autoPlay 
         playsInline 
-        className="absolute inset-0 w-full h-full object-cover grayscale-[0.3] contrast-[1.2]"
+        className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] contrast-[1.1]"
       />
       
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         {/* Rectangular Scanner Frame (better for barcodes) */}
-        <div className={`w-[85%] h-40 border-4 rounded-[2rem] relative overflow-hidden transition-all duration-300 ${isDetected ? 'border-sage shadow-[0_0_40px_rgba(93,109,63,0.6)]' : 'border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.1)]'}`}>
+        <div className={`w-[85%] h-44 border-4 rounded-[2rem] relative overflow-hidden transition-all duration-300 ${isDetected ? 'border-sage shadow-[0_0_40px_rgba(93,109,63,0.6)]' : 'border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.1)]'}`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(93,109,63,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
           
+          {/* Animated Scanning Beam */}
           <motion.div 
-            animate={{ y: isDetected ? 80 : [0, 160, 0] }}
+            animate={{ y: isDetected ? 88 : [0, 176, 0] }}
             transition={{ duration: isDetected ? 0.2 : 2.5, repeat: isDetected ? 0 : Infinity, ease: "easeInOut" }}
-            className={`w-full h-1 absolute z-10 ${isDetected ? 'bg-sage shadow-[0_0_20px_#5D6D3F]' : 'bg-white/60 shadow-[0_0_15px_rgba(255,255,255,0.5)]'}`} 
+            className={`w-full h-1 absolute z-10 ${isDetected ? 'bg-sage shadow-[0_0_20px_#5D6D3F]' : 'bg-white/60 shadow-[0_0:15px_rgba(255,255,255,0.5)]'}`} 
           />
           
-          {/* Corner Brackets for visual focus */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-opacity duration-500 ${isDetected ? 'opacity-0' : 'opacity-30 text-white'}`}>
+              Optical Focus Engaged
+            </div>
+          </div>
+          
+          {/* Corner Brackets */}
           <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-white/20 rounded-tl-lg" />
           <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-white/20 rounded-tr-lg" />
           <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-white/20 rounded-bl-lg" />
