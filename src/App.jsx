@@ -515,9 +515,10 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete, onShowMarket }) => {
             <Trash2 className="w-6 h-6" />
           </button>
         </div>
-      </motion.div>
+      </div>
     </motion.div>
-  );
+  </motion.div>
+);
 };
 
 // --- Screens ---
