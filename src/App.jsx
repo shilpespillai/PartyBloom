@@ -444,7 +444,6 @@ const Stats = ({ onSelectCategory }) => (
 const Scanner = ({ onScan }) => {
   const videoRef = React.useRef(null);
   const [hasCamera, setHasCamera] = React.useState(false);
-  const [torch, setTorch] = React.useState(false);
   const [showManual, setShowManual] = React.useState(false);
   const [manualCode, setManualCode] = React.useState('');
 
@@ -494,16 +493,6 @@ const Scanner = ({ onScan }) => {
     };
   }, []);
 
-  const toggleTorch = async () => {
-    if (videoRef.current?.srcObject) {
-      const track = videoRef.current.srcObject.getVideoTracks()[0];
-      try {
-        await track.applyConstraints({ advanced: [{ torch: !torch }] });
-        setTorch(!torch);
-      } catch (e) { console.warn("Torch not supported"); }
-    }
-  };
-
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
       {/* Real Camera Feed */}
@@ -527,12 +516,7 @@ const Scanner = ({ onScan }) => {
 
       <div className="absolute top-10 left-6 right-6 flex justify-between items-center text-white">
         <h3 className="text-xl font-bold drop-shadow-md">Auditor Scan</h3>
-        <div className="flex gap-2">
-          <button onClick={toggleTorch} className={`p-3 rounded-full backdrop-blur-md transition-colors ${torch ? 'bg-sage' : 'bg-white/10'}`}>
-            <Zap className="w-5 h-5" />
-          </button>
-          <button className="p-3 bg-white/10 rounded-full backdrop-blur-md"><Settings className="w-5 h-5" /></button>
-        </div>
+        <button className="p-3 bg-white/10 rounded-full backdrop-blur-md"><Settings className="w-5 h-5" /></button>
       </div>
 
       <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-6 px-8">
