@@ -165,9 +165,8 @@ const LivelyTree = ({ healthScore }) => {
     { cx: 65, cy: 48 }, { cx: 52, cy: 68 }, { cx: 72, cy: 68 }
   ];
 
-  const bloomCount = healthScore < 30 ? 0 : 
-                     healthScore < 50 ? 4 : 
-                     healthScore < 75 ? 9 : 15;
+  // Linear Growth: Roughly 1 bloom for every 6.6 points (0 to 15 blossoms)
+  const bloomCount = Math.floor(healthScore / 6.6);
 
   return (
     <div className="relative w-80 h-80 flex items-center justify-center">
