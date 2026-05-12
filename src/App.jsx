@@ -444,6 +444,9 @@ const Stats = ({ onSelectCategory }) => (
 const Scanner = ({ onScan }) => {
   const videoRef = React.useRef(null);
   const [hasCamera, setHasCamera] = React.useState(false);
+  const [torch, setTorch] = React.useState(false);
+  const [showManual, setShowManual] = React.useState(false);
+  const [manualCode, setManualCode] = React.useState('');
 
   useEffect(() => {
     let stream = null;
@@ -452,8 +455,8 @@ const Scanner = ({ onScan }) => {
         stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: 'environment',
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
             frameRate: { ideal: 30 }
           } 
         });
@@ -461,15 +464,6 @@ const Scanner = ({ onScan }) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           setHasCamera(true);
-
-          // Attempt to enable Continuous Autofocus if supported
-          const track = stream.getVideoTracks()[0];
-          const capabilities = track.getCapabilities?.() || {};
-          if (capabilities.focusMode?.includes('continuous')) {
-            await track.applyConstraints({
-              advanced: [{ focusMode: 'continuous' }]
-            });
-          }
         }
 
         // Real-time Barcode Detection
@@ -500,25 +494,18 @@ const Scanner = ({ onScan }) => {
     };
   }, []);
 
-  const triggerFocus = async () => {
-    // Manual focus pulse for browsers that support it
+  const toggleTorch = async () => {
     if (videoRef.current?.srcObject) {
       const track = videoRef.current.srcObject.getVideoTracks()[0];
-      const capabilities = track.getCapabilities?.() || {};
-      if (capabilities.focusMode?.includes('single-shot')) {
-        try {
-          await track.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] });
-          // Re-enable continuous after a brief moment
-          setTimeout(() => {
-             track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-          }, 500);
-        } catch (e) { console.warn("Manual focus failed"); }
-      }
+      try {
+        await track.applyConstraints({ advanced: [{ torch: !torch }] });
+        setTorch(!torch);
+      } catch (e) { console.warn("Torch not supported"); }
     }
   };
 
   return (
-    <div className="relative w-full h-full bg-black overflow-hidden" onClick={triggerFocus}>
+    <div className="relative w-full h-full bg-black overflow-hidden">
       {/* Real Camera Feed */}
       <video 
         ref={videoRef} 
@@ -527,41 +514,82 @@ const Scanner = ({ onScan }) => {
         className="absolute inset-0 w-full h-full object-cover"
       />
       
-      {/* Tap to Focus Hint */}
-      <div className="absolute top-1/4 left-0 right-0 text-center pointer-events-none opacity-40">
-        <p className="text-[10px] text-white font-bold uppercase tracking-widest">Tap to Focus</p>
-      </div>
-
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-64 h-64 border-2 border-white/50 rounded-[3rem] relative overflow-hidden">
+        <div className="w-64 h-64 border-2 border-white/30 rounded-[3rem] relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(93,109,63,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
           <motion.div 
             animate={{ y: [0, 256, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
             className="w-full h-1 bg-sage shadow-[0_0_15px_#5D6D3F] absolute z-10" 
           />
-          {/* Scanning Overlay Grid */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(93,109,63,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
         </div>
       </div>
 
       <div className="absolute top-10 left-6 right-6 flex justify-between items-center text-white">
         <h3 className="text-xl font-bold drop-shadow-md">Auditor Scan</h3>
-        <button className="p-2 bg-white/10 rounded-full backdrop-blur-md"><Settings className="w-5 h-5" /></button>
+        <div className="flex gap-2">
+          <button onClick={toggleTorch} className={`p-3 rounded-full backdrop-blur-md transition-colors ${torch ? 'bg-sage' : 'bg-white/10'}`}>
+            <Zap className="w-5 h-5" />
+          </button>
+          <button className="p-3 bg-white/10 rounded-full backdrop-blur-md"><Settings className="w-5 h-5" /></button>
+        </div>
       </div>
 
-      <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center gap-6">
-        <p className="text-white/80 text-xs font-bold uppercase tracking-widest drop-shadow-md">
-          {hasCamera ? 'Point at a barcode to audit' : 'Requesting camera...'}
-        </p>
+      <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-6 px-8">
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em] drop-shadow-md">
+            Align Barcode to Scan
+          </p>
+          <button 
+            onClick={() => setShowManual(true)}
+            className="text-white/40 text-[9px] font-bold uppercase tracking-widest underline decoration-white/20"
+          >
+            Enter Manually
+          </button>
+        </div>
         
-        {/* Shutter Button (Manual Override for testing) */}
+        {/* Shutter Button (Manual Override) */}
         <button 
           onClick={() => onScan('048001213501')}
-          className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-8 border-white/20 active:scale-95 transition-all shadow-2xl"
+          className="w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-white/20 active:scale-95 transition-all shadow-2xl"
         >
-          <div className="w-12 h-12 bg-stone-800 rounded-full" />
+          <div className="w-10 h-10 bg-stone-800 rounded-full" />
         </button>
       </div>
+
+      {/* Manual Entry Overlay */}
+      <AnimatePresence>
+        {showManual && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-stone-900/90 backdrop-blur-xl z-[100] flex items-center justify-center p-8"
+          >
+            <div className="w-full space-y-6">
+              <div className="text-center">
+                <h3 className="text-2xl text-white font-serif mb-2">Manual Entry</h3>
+                <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Type the Barcode Number</p>
+              </div>
+              <input 
+                type="text"
+                autoFocus
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value)}
+                placeholder="e.g. 048001213501"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white text-center text-xl outline-none focus:border-sage transition-colors"
+              />
+              <div className="flex gap-3">
+                <button onClick={() => setShowManual(false)} className="flex-1 py-4 bg-white/5 text-white/60 rounded-2xl font-bold text-xs uppercase tracking-widest">Cancel</button>
+                <button 
+                  onClick={() => { if(manualCode) onScan(manualCode); }} 
+                  className="flex-1 py-4 bg-sage text-white rounded-2xl font-bold text-xs uppercase tracking-widest"
+                >
+                  Audit Product
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
