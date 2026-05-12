@@ -20,7 +20,8 @@ import {
   Cloud
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { db } from './firebase';
+import { db, auth } from './firebase';
+import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { 
   collection, 
   onSnapshot, 
@@ -909,10 +910,28 @@ const App = () => {
     ];
   });
 
-  // 1. Real-time Firebase Sync
+  const [user, setUser] = useState(null);
+
+  // 1. User Authentication & Real-time Sync
   useEffect(() => {
+    // A. Handle Authentication
+    const authUnsubscribe = onAuthStateChanged(auth, (u) => {
+      if (u) {
+        setUser(u);
+      } else {
+        signInAnonymously(auth).catch(e => console.error("Auth failed:", e));
+      }
+    });
+
+    return () => authUnsubscribe();
+  }, []);
+
+  // 2. Scoped Firestore Sync (Only runs when user is logged in)
+  useEffect(() => {
+    if (!user) return;
+
     try {
-      const q = query(collection(db, "pantry"), orderBy("id", "desc"));
+      const q = query(collection(db, "users", user.uid, "pantry"), orderBy("id", "desc"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const itemsFromCloud = [];
         snapshot.forEach((doc) => {
@@ -920,15 +939,15 @@ const App = () => {
         });
         if (itemsFromCloud.length > 0) setPantryItems(itemsFromCloud);
       }, (err) => {
-        console.warn("Firebase sync error - using local fallback.", err);
+        console.warn("Firestore sync error:", err);
       });
       return () => unsubscribe();
     } catch (e) {
-      console.warn("Firebase not configured correctly.");
+      console.warn("Firestore initialization failed.");
     }
-  }, []);
+  }, [user]);
 
-  // 2. Persist to LocalStorage (Local Backup)
+  // 3. Persist to LocalStorage (Local Backup)
   useEffect(() => {
     localStorage.setItem('pantry_bloom_items', JSON.stringify(pantryItems));
   }, [pantryItems]);
@@ -1015,6 +1034,8 @@ const App = () => {
   };
 
   const addToPantry = async (item) => {
+    if (!user) return;
+    
     // Instant UI feedback
     setPantryItems(prev => {
       const exists = prev.find(p => p.id === item.id);
@@ -1022,11 +1043,11 @@ const App = () => {
       return [item, ...prev];
     });
 
-    // Cloud Save
+    // Cloud Save (Scoped to User)
     try {
-      await setDoc(doc(db, "pantry", item.id.toString()), item);
+      await setDoc(doc(db, "users", user.uid, "pantry", item.id.toString()), item);
     } catch (e) {
-      console.warn("Cloud save failed, local only.");
+      console.warn("Cloud save failed.");
     }
 
     setScannedItem(null);
@@ -1034,12 +1055,14 @@ const App = () => {
   };
 
   const removeFromPantry = async (id) => {
+    if (!user) return;
+
     // Instant UI removal
     setPantryItems(prev => prev.filter(p => p.id !== id));
     
-    // Cloud Removal
+    // Cloud Removal (Scoped to User)
     try {
-      await deleteDoc(doc(db, "pantry", id.toString()));
+      await deleteDoc(doc(db, "users", user.uid, "pantry", id.toString()));
     } catch (e) {
       console.warn("Cloud delete failed.");
     }
