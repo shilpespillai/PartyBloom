@@ -18,7 +18,8 @@ import {
   X,
   UserPlus,
   Cloud,
-  Trash2
+  Trash2,
+  MapPin
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { db, auth } from './firebase';
@@ -365,17 +366,26 @@ const Dashboard = ({ healthScore, onSelectCategory, onShowMarket }) => {
           <h1 className="text-3xl font-bold text-stone-800 leading-none">Pantry Bloom</h1>
           <p className="text-stone-400 text-sm mt-2">Your clean kitchen companion</p>
         </div>
-        <button 
-          onClick={handleSync}
-          className="flex flex-col items-center gap-1 group"
-        >
-          <div className={`p-2 rounded-xl transition-all ${isSyncing ? 'bg-sage text-white animate-spin' : 'bg-stone-50 text-stone-300 group-hover:text-sage'}`}>
-            <Cloud className="w-4 h-4" />
-          </div>
-          <span className="text-[8px] font-bold text-stone-300 uppercase tracking-tighter">
-            {isSyncing ? 'Syncing...' : `Saved ${lastSync}`}
-          </span>
-        </button>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={onShowMarket}
+            className="p-2.5 bg-wood/10 text-wood-dark rounded-xl hover:bg-wood/20 transition-all shadow-sm"
+            title="Local Farmers Market"
+          >
+            <MapPin className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={handleSync}
+            className="flex flex-col items-center gap-1 group"
+          >
+            <div className={`p-2 rounded-xl transition-all ${isSyncing ? 'bg-sage text-white animate-spin' : 'bg-stone-50 text-stone-300 group-hover:text-sage'}`}>
+              <Cloud className="w-4 h-4" />
+            </div>
+            <span className="text-[8px] font-bold text-stone-300 uppercase tracking-tighter">
+              {isSyncing ? 'Syncing...' : `Saved ${lastSync}`}
+            </span>
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col items-center py-10 bg-cream">
@@ -419,17 +429,6 @@ const Dashboard = ({ healthScore, onSelectCategory, onShowMarket }) => {
       </button>
     </div>
 
-    <div className="px-6 mt-10 p-6 rounded-[2rem] bg-wood/10 border border-wood/10 relative overflow-hidden">
-      <ShoppingBag className="absolute -right-4 -bottom-4 w-24 h-24 text-wood/5 rotate-12" />
-      <h4 className="text-wood-dark mb-1">Local Farmers Market</h4>
-      <p className="text-xs text-wood/60 mb-2 leading-relaxed">Wyndham Vale: Fresh organic avocados available this Saturday in Werribee.</p>
-      <button 
-        onClick={onShowMarket}
-        className="text-xs font-bold text-wood-dark underline"
-      >
-        View Market Map
-      </button>
-    </div>
   </motion.div>
   );
 };
