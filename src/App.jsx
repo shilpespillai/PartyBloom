@@ -67,7 +67,7 @@ const LivelyTree = ({ healthScore }) => {
 
 const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
   const [manualDate, setManualDate] = useState(item.expiryDate || '');
-  const [viewDetails, setViewDetails] = useState(false);
+  const [activeTab, setActiveTab] = useState('impact');
   const [isSaving, setIsSaving] = useState(false);
 
   const getAlternative = (item) => {
@@ -87,10 +87,7 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
 
   const handleDateChange = (newDate) => {
     setManualDate(newDate);
-    // Autosave if editing an existing pantry item
-    if (item.id && !item.isNew) {
-      onAdd({ ...item, expiryDate: newDate });
-    }
+    if (item.id && !item.isNew) onAdd({ ...item, expiryDate: newDate });
   };
 
   const handleAdd = () => {
@@ -114,68 +111,102 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-2xl font-bold mb-1">{item.name}</h2>
-          <span className={`audit-tag ${item.score > 70 ? 'tag-clean' : 'tag-processed'}`}>
-            NOVA {item.nova} • {item.score > 70 ? 'Minimally Processed' : 'Ultra Processed'}
-          </span>
+          <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{item.brand}</p>
         </div>
         <button onClick={onDismiss} className="p-2 bg-stone-50 rounded-full"><X className="w-5 h-5 text-stone-400" /></button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="p-4 bg-stone-50 rounded-2xl flex items-center gap-3">
-          <Leaf className="w-5 h-5 text-sage" />
-          <div>
-            <p className="text-[10px] font-bold text-stone-400 uppercase">Fats</p>
-            <p className="font-bold text-xs">{item.oils}</p>
-          </div>
-        </div>
-        <div className="p-4 bg-stone-50 rounded-2xl flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-terracotta" />
-          <div>
-            <p className="text-[10px] font-bold text-stone-400 uppercase">Sugar</p>
-            <p className="font-bold text-xs">{item.sugar} Added</p>
-          </div>
-        </div>
+      {/* Premium Tab Navigation */}
+      <div className="flex gap-2 mb-6 p-1 bg-stone-100 rounded-2xl">
+        {['impact', 'ingredients', 'nutrition'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === tab ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
-      <div className="border-t border-stone-100 pt-6 mb-8">
-        <button 
-          onClick={() => setViewDetails(!viewDetails)}
-          className="w-full flex justify-between items-center text-xs font-bold text-stone-400 uppercase tracking-widest mb-4"
-        >
-          Full Barcode Information <ChevronRight className={`w-4 h-4 transition-transform ${viewDetails ? 'rotate-90' : ''}`} />
-        </button>
-
-        <AnimatePresence>
-          {viewDetails && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="space-y-4 overflow-hidden"
-            >
-              <div className="p-4 bg-cream/50 rounded-2xl">
-                <p className="text-[10px] font-bold text-stone-400 mb-2">INGREDIENTS</p>
-                <p className="text-xs leading-relaxed text-stone-600">{item.ingredients}</p>
+      <AnimatePresence mode="wait">
+        {activeTab === 'impact' && (
+          <motion.div 
+            key="impact"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            className="space-y-4 mb-8"
+          >
+            {/* Good Things */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-sage uppercase tracking-widest">Clean Points</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-3 py-2 bg-sage/10 text-sage rounded-xl text-[10px] font-bold flex items-center gap-1.5 border border-sage/10">
+                  <Leaf className="w-3 h-3" /> No Added Sugar
+                </span>
+                <span className="px-3 py-2 bg-sage/10 text-sage rounded-xl text-[10px] font-bold flex items-center gap-1.5 border border-sage/10">
+                  <CheckCircle2 className="w-3 h-3" /> Organic Base
+                </span>
               </div>
+            </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { l: 'Calories', v: item.nutrition?.cal || '90' },
-                  { l: 'Protein', v: '0.2g' },
-                  { l: 'Carbs', v: item.nutrition?.sugar || '3.1g' }
-                ].map(d => (
-                  <div key={d.l} className="p-3 border border-stone-100 rounded-xl text-center">
-                    <p className="text-[8px] font-bold text-stone-300 uppercase">{d.l}</p>
-                    <p className="text-xs font-bold">{d.v}</p>
-                  </div>
-                ))}
+            {/* Bad Things */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-terracotta uppercase tracking-widest">Watch Out</p>
+              <div className="flex flex-wrap gap-2">
+                {item.oils !== 'Clean' && (
+                  <span className="px-3 py-2 bg-terracotta/10 text-terracotta rounded-xl text-[10px] font-bold flex items-center gap-1.5 border border-terracotta/10">
+                    <AlertCircle className="w-3 h-3" /> Seed Oils Found
+                  </span>
+                )}
+                {item.nova >= 3 && (
+                  <span className="px-3 py-2 bg-terracotta/10 text-terracotta rounded-xl text-[10px] font-bold flex items-center gap-1.5 border border-terracotta/10">
+                    <AlertCircle className="w-3 h-3" /> Ultra Processed
+                  </span>
+                )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            </div>
+          </motion.div>
+        )}
 
+        {activeTab === 'ingredients' && (
+          <motion.div 
+            key="ingredients"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            className="p-5 bg-cream/30 rounded-3xl border border-stone-100 mb-8"
+          >
+            <p className="text-xs leading-relaxed text-stone-600 italic font-serif">
+              "{item.ingredients || 'Ingredients list being processed...'}"
+            </p>
+          </motion.div>
+        )}
+
+        {activeTab === 'nutrition' && (
+          <motion.div 
+            key="nutrition"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            className="grid grid-cols-3 gap-3 mb-8"
+          >
+            {[
+              { l: 'Calories', v: item.nutrition?.cal || '0', c: 'stone' },
+              { l: 'Fats', v: item.nutrition?.fat || '0g', c: 'stone' },
+              { l: 'Sugars', v: item.nutrition?.sugar || '0g', c: 'terracotta' }
+            ].map(n => (
+              <div key={n.l} className="p-4 bg-stone-50 rounded-2xl text-center border border-stone-100">
+                <p className={`text-[8px] font-bold uppercase tracking-widest mb-1 ${n.c === 'terracotta' ? 'text-terracotta' : 'text-stone-300'}`}>{n.l}</p>
+                <p className="text-sm font-black text-stone-800">{n.v}</p>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Alternative & Save Controls (Always Visible) */}
       <div className="bg-sage/5 border border-sage/10 rounded-3xl p-5 mb-8">
         <p className="text-xs font-bold text-sage uppercase mb-3 tracking-widest">Better Alternative</p>
         <div className="flex items-center justify-between">
