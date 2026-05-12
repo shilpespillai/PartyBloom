@@ -27,7 +27,10 @@
 
 @layer components {
   .phone-container {
-    @apply relative w-full h-screen bg-cream overflow-hidden shadow-none sm:shadow-2xl sm:rounded-[3rem] sm:max-w-[450px] sm:h-[850px] sm:border-[8px] sm:border-zinc-800 mx-auto sm:my-10;
+    @apply relative w-full h-[100dvh] bg-cream overflow-hidden shadow-none sm:shadow-2xl sm:rounded-[3rem] sm:max-w-[450px] sm:h-[850px] sm:border-[8px] sm:border-zinc-800 mx-auto sm:my-10;
+    /* Respect Notch & Home Bar */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .cozy-card {
