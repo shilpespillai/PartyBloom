@@ -854,15 +854,17 @@ const Scanner = ({ onScan }) => {
                 if (barcodes.length > 0) {
                   isScanning = false;
                   if ('vibrate' in navigator) navigator.vibrate(40);
-                  onScan(barcodes[0].rawValue); // Instant trigger
+                  onScan(barcodes[0].rawValue);
                   return;
                 }
               } catch (e) { /* ignore */ }
             }
             requestAnimationFrame(scanLoop);
           };
-          
           requestAnimationFrame(scanLoop);
+        } else {
+          console.warn("BarcodeDetector not supported in this browser.");
+          // We don't alert here to avoid annoying the user, but the UI will show manual options
         }
       } catch (err) {
         console.error("Camera error:", err);
