@@ -18,7 +18,7 @@
 
 @layer base {
   body {
-    @apply bg-zinc-100 text-stone-800 font-['Inter'] antialiased;
+    @apply bg-zinc-100 text-stone-800 font-['Outfit'] antialiased;
   }
   h1, h2, h3, h4 {
     @apply font-['Playfair_Display'] font-bold;
@@ -34,10 +34,6 @@
     @apply bg-white border border-stone-200 rounded-3xl shadow-sm p-5;
   }
 
-  .wooden-btn {
-    @apply bg-wood text-white px-6 py-3 rounded-2xl font-bold shadow-md hover:bg-wood-dark transition-all active:scale-95;
-  }
-
   .glass-header {
     @apply bg-cream/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 border-b border-stone-100;
   }
@@ -48,17 +44,6 @@
 
   .tag-clean {
     @apply bg-sage-light text-sage;
-  }
-
-  .wooden-shelf {
-    @apply relative py-8 px-4 mb-10;
-    background: linear-gradient(to bottom, transparent 90%, #8B5E3C 100%);
-    border-bottom: 8px solid #5D4037;
-    box-shadow: 0 10px 20px -10px rgba(0,0,0,0.3);
-  }
-
-  .shelf-label {
-    @apply absolute -top-4 left-6 px-4 py-1 bg-wood text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-md;
   }
 }
 
