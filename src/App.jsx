@@ -726,8 +726,12 @@ const Stats = ({ stats, onSelectCategory }) => {
           </button>
         );
       })}
-    </div>
-  </motion.div>
+      <div className="flex justify-center mt-6 pb-6">
+        <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest">
+          Pantry Bloom Boutique • v1.0.67
+        </p>
+      </div>
+    </motion.div>
   );
 };
 
