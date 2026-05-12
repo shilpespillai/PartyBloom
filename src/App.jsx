@@ -298,7 +298,12 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
             disabled={isSaving}
             className={`col-span-3 py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all flex items-center justify-center gap-2 ${isSaving ? 'bg-sage text-white scale-95' : 'wooden-btn text-white'}`}
           >
-            {isSaving ? '✅ Saved' : <><Scan className="w-4 h-4" /> {item.id && !item.isNew ? 'Update Item' : 'Add to Pantry'}</>}
+            {isSaving ? '✅ Saved' : (
+              <>
+                <Scan className="w-4 h-4" /> 
+                {item.inPantry ? 'Update Item' : 'Add to Pantry'}
+              </>
+            )}
           </button>
           
           <button 
@@ -431,9 +436,26 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
       <div className="flex flex-col items-center py-10 bg-cream">
         <LivelyTree healthScore={healthScore} />
         <div className="text-center mt-6">
-          <h3 className="text-6xl font-bold text-[#1a3a1a] tracking-tighter">{healthScore}</h3>
+          <motion.h3 
+            key={healthScore}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-7xl font-serif-luxury text-[#1a3a1a] tracking-tighter"
+          >
+            {healthScore}
+          </motion.h3>
           <p className="text-sm text-stone-500 mt-2 font-medium">Pantry Health Score</p>
-          <div className="mt-4 px-6 py-2 bg-[#E8EDE0] text-[#5D6D3F] rounded-full font-bold text-sm inline-block shadow-sm">
+          <div className={`mt-4 px-6 py-2 rounded-full font-bold text-sm inline-block shadow-sm ${
+            healthScore >= 80 ? 'bg-[#E8EDE0] text-[#5D6D3F]' :
+            healthScore >= 60 ? 'bg-blue-50 text-blue-600' :
+            healthScore >= 40 ? 'bg-orange-50 text-orange-600' :
+            'bg-red-50 text-terracotta'
+          }`}>
+            {healthScore >= 80 ? 'Excellent' :
+             healthScore >= 60 ? 'Good' :
+             healthScore >= 40 ? 'Fair' :
+             'Poor'}
+          </div>
         </div>
       </div>
 
@@ -467,7 +489,9 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
       </button>
  
       <button onClick={() => onSelectCategory('expiring', 'Expiring Soon')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
-        <Timer className="w-8 h-8 text-terracotta mb-4" />
+        <div className={expiringCount > 0 ? 'animate-bounce' : ''}>
+          <Timer className={`w-8 h-8 mb-4 ${expiringCount > 0 ? 'text-red-500' : 'text-terracotta'}`} />
+        </div>
         <p className="text-lg font-bold text-stone-800">{expiringCount}</p>
         <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Expiring</p>
       </button>
@@ -553,31 +577,36 @@ const Stats = ({ stats, onSelectCategory }) => {
     <h3 className="text-lg mb-4">Expiry Forecast</h3>
     <div className="space-y-4">
       {[
-        { id: 'week', label: 'This Week', count: 3, color: 'bg-terracotta', percentage: 10 },
-        { id: 'month', label: 'This Month', count: 14, color: 'bg-wood', percentage: 45 },
-        { id: 'year', label: 'Yearly Stock', count: 22, color: 'bg-sage', percentage: 35 },
-      ].map((period) => (
-        <button 
-          key={period.label} 
-          onClick={() => onSelectCategory(period.id, period.label)}
-          className="w-full bg-white p-5 rounded-[2rem] border border-stone-100 text-left active:scale-95 transition-all"
-        >
-          <div className="flex justify-between items-center mb-3">
-            <span className="font-bold text-sm">{period.label}</span>
-            <span className="text-xs font-bold text-stone-400">{period.count} items</span>
-          </div>
-          <div className="w-full h-2 bg-stone-50 rounded-full overflow-hidden">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${period.percentage}%` }}
-              className={`h-full ${period.color}`} 
-            />
-          </div>
-        </button>
-      ))}
+        { id: 'week', label: 'This Week', count: stats.weekCount, color: 'bg-terracotta' },
+        { id: 'month', label: 'This Month', count: stats.monthCount, color: 'bg-wood' },
+        { id: 'year', label: 'Yearly Stock', count: stats.yearCount, color: 'bg-sage' },
+      ].map((period) => {
+        const total = (stats.weekCount + stats.monthCount + stats.yearCount) || 1;
+        const percentage = Math.round((period.count / total) * 100);
+        return (
+          <button 
+            key={period.label} 
+            onClick={() => onSelectCategory(period.id, period.label)}
+            className="w-full bg-white p-5 rounded-[2rem] border border-stone-100 text-left active:scale-95 transition-all"
+          >
+            <div className="flex justify-between items-center mb-3">
+              <span className="font-bold text-sm">{period.label}</span>
+              <span className="text-xs font-bold text-stone-400">{period.count} items</span>
+            </div>
+            <div className="w-full h-2 bg-stone-50 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${percentage}%` }}
+                className={`h-full ${period.color}`} 
+              />
+            </div>
+          </button>
+        );
+      })}
     </div>
   </motion.div>
-);
+  );
+};
 
 const Scanner = ({ onScan }) => {
   const videoRef = React.useRef(null);
@@ -897,9 +926,21 @@ const Pantry = ({ items, onItemClick }) => {
             <motion.div 
               key={idx} 
               whileHover={{ y: -5 }}
-              onClick={() => onItemClick(item)}
-              className="bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all"
+              onClick={() => onItemClick({ ...item, inPantry: true })}
+              className="bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all relative"
             >
+              {(() => {
+                const d = new Date(item.expiryDate);
+                const days = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+                if (days <= 7) {
+                  return (
+                    <div className="absolute top-2 right-2 w-5 h-5 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-pulse z-10 border-2 border-white">
+                      !!
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               {item.image ? (
                 <div className="w-12 h-12 mb-2 rounded-lg overflow-hidden bg-white/50">
                   <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
@@ -990,7 +1031,40 @@ const App = () => {
     ];
   });
 
-  const [user, setUser] = useState(null);
+  // --- Dynamic Stats Engine ---
+  const stats = React.useMemo(() => {
+    const total = pantryItems.length || 1;
+    const clean = pantryItems.filter(i => i.score >= 70);
+    const junky = pantryItems.filter(i => i.score < 40);
+    const fair = pantryItems.filter(i => i.score >= 40 && i.score < 70);
+    
+    // Calculate Days
+    const getDays = (dateStr) => {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return 999;
+      return Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+    };
+    
+    const expiringWeek = pantryItems.filter(i => getDays(i.expiryDate) <= 7);
+    const expiringMonth = pantryItems.filter(i => getDays(i.expiryDate) <= 30);
+    const longTerm = pantryItems.filter(i => getDays(i.expiryDate) > 30);
+    const scoreSum = pantryItems.reduce((acc, i) => acc + (i.score || 0), 0);
+    
+    return {
+      healthScore: Math.round(scoreSum / (pantryItems.length || 1)),
+      cleanPercent: Math.round((clean.length / total) * 100),
+      junkyPercent: Math.round((junky.length / total) * 100),
+      expiringCount: expiringWeek.length,
+      weekCount: expiringWeek.length,
+      monthCount: expiringMonth.length,
+      yearCount: longTerm.length,
+      distData: [
+        { name: 'Good', value: clean.length, color: '#5D6D3F' },
+        { name: 'Fair', value: fair.length, color: '#A67B5B' },
+        { name: 'Poor', value: junky.length, color: '#D27D56' }
+      ]
+    };
+  }, [pantryItems]);
 
   // 1. User Authentication & Real-time Sync
   useEffect(() => {
@@ -1005,6 +1079,37 @@ const App = () => {
 
     return () => authUnsubscribe();
   }, []);
+
+  // 1.5 System Notification Engine (Expiry Alerts)
+  useEffect(() => {
+    if (!("Notification" in window)) return;
+    
+    const checkUrgentExpiry = async () => {
+      // Request Permission
+      if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        await Notification.requestPermission();
+      }
+      
+      if (Notification.permission === 'granted') {
+        const urgentItems = pantryItems.filter(i => {
+          const d = new Date(i.expiryDate);
+          const days = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+          return days >= 0 && days <= 2;
+        });
+        
+        if (urgentItems.length > 0) {
+          new Notification("Pantry Bloom Alert", {
+            body: `You have ${urgentItems.length} items expiring very soon! Use them today to avoid waste. 🍎`,
+            icon: "/logo192.png" // Standard PWA logo path
+          });
+        }
+      }
+    };
+
+    // Check on load after short delay
+    const timer = setTimeout(checkUrgentExpiry, 3000);
+    return () => clearTimeout(timer);
+  }, [pantryItems.length]);
 
   // 2. Scoped Firestore Sync (Only runs when user is logged in)
   useEffect(() => {
@@ -1056,36 +1161,6 @@ const App = () => {
   const handleScan = async (scannedData) => {
     const barcode = scannedData.code || scannedData; // Handle both direct string or object
     
-  // --- Dynamic Stats Engine ---
-  const stats = React.useMemo(() => {
-    const total = pantryItems.length || 1;
-    const clean = pantryItems.filter(i => i.score >= 70);
-    const junky = pantryItems.filter(i => i.score < 40);
-    const fair = pantryItems.filter(i => i.score >= 40 && i.score < 70);
-    
-    // Calculate Days
-    const getDays = (dateStr) => {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return 999;
-      return Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
-    };
-    
-    const expiring = pantryItems.filter(i => getDays(i.expiryDate) <= 7);
-    const scoreSum = pantryItems.reduce((acc, i) => acc + (i.score || 0), 0);
-    
-    return {
-      healthScore: Math.round(scoreSum / (pantryItems.length || 1)),
-      cleanPercent: Math.round((clean.length / total) * 100),
-      junkyPercent: Math.round((junky.length / total) * 100),
-      expiringCount: expiring.length,
-      distData: [
-        { name: 'Good', value: clean.length, color: '#5D6D3F' },
-        { name: 'Fair', value: fair.length, color: '#A67B5B' },
-        { name: 'Poor', value: junky.length, color: '#D27D56' }
-      ]
-    };
-  }, [pantryItems]);
-
     try {
       // 2. Real API Lookup (Open Food Facts - No API Key required for simple GET)
       const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
@@ -1095,6 +1170,9 @@ const App = () => {
         // 1. Extract Raw Data
         const p = data.product;
         const n = p.nutriments || {};
+        
+        // Check if exists in pantry
+        const existingItem = pantryItems.find(i => i.barcode === barcode);
         
         // 2. Yuka-Style Scoring Engine
         let baseScore = p.nutriscore_score !== undefined ? (100 - (p.nutriscore_score * 2)) : 60;
@@ -1117,7 +1195,9 @@ const App = () => {
         const resolvedName = p.product_name || p.product_name_en || p.generic_name || p.brands || 'New Product';
         
         const realItem = {
-          id: Date.now(),
+          id: existingItem ? existingItem.id : Date.now(),
+          barcode: barcode,
+          inPantry: !!existingItem,
           name: resolvedName,
           brand: p.brands || 'Artisan Brand',
           score: finalScore,
@@ -1136,7 +1216,7 @@ const App = () => {
             sodium: Math.round((n.salt_100g || 0) * 400), // mg sodium
             fiber: n.fiber_100g || 0
           },
-          expiryDate: new Date(Date.now() + 1000*60*60*24*30).toLocaleDateString()
+          expiryDate: existingItem ? existingItem.expiryDate : new Date(Date.now() + 1000*60*60*24*30).toLocaleDateString()
         };
         setScannedItem(realItem);
       } else {
