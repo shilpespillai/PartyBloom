@@ -446,6 +446,7 @@ const Scanner = ({ onScan }) => {
   const [hasCamera, setHasCamera] = React.useState(false);
   const [showManual, setShowManual] = React.useState(false);
   const [manualCode, setManualCode] = React.useState('');
+  const [isDetected, setIsDetected] = React.useState(false);
 
   useEffect(() => {
     let stream = null;
@@ -456,7 +457,8 @@ const Scanner = ({ onScan }) => {
             facingMode: 'environment',
             width: { ideal: 1280 },
             height: { ideal: 720 },
-            frameRate: { ideal: 30 }
+            frameRate: { ideal: 30 },
+            zoom: 2.0
           } 
         });
         
@@ -473,8 +475,11 @@ const Scanner = ({ onScan }) => {
               try {
                 const barcodes = await detector.detect(videoRef.current);
                 if (barcodes.length > 0) {
-                  clearInterval(interval);
-                  onScan(barcodes[0].rawValue);
+                  setIsDetected(true);
+                  setTimeout(() => {
+                    clearInterval(interval);
+                    onScan(barcodes[0].rawValue);
+                  }, 500); // Brief delay for visual "Snap"
                 }
               } catch (e) { /* ignore */ }
             }
@@ -504,12 +509,12 @@ const Scanner = ({ onScan }) => {
       />
       
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-64 h-64 border-2 border-white/30 rounded-[3rem] relative overflow-hidden">
+        <div className={`w-64 h-64 border-4 rounded-[3rem] relative overflow-hidden transition-colors duration-300 ${isDetected ? 'border-sage shadow-[0_0_30px_rgba(93,109,63,0.5)]' : 'border-white/30'}`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(93,109,63,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
           <motion.div 
-            animate={{ y: [0, 256, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="w-full h-1 bg-sage shadow-[0_0_15px_#5D6D3F] absolute z-10" 
+            animate={{ y: isDetected ? 128 : [0, 256, 0] }}
+            transition={{ duration: isDetected ? 0.2 : 3, repeat: isDetected ? 0 : Infinity, ease: "linear" }}
+            className={`w-full h-1 absolute z-10 ${isDetected ? 'bg-sage scale-x-110 shadow-[0_0_20px_#5D6D3F]' : 'bg-white/50 shadow-[0_0_15px_rgba(255,255,255,0.5)]'}`} 
           />
         </div>
       </div>
