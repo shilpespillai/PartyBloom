@@ -131,8 +131,8 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
               <h2 className="text-2xl font-bold mb-1">{item.name}</h2>
               <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{item.brand}</p>
             </div>
-            <button onClick={onDismiss} className="p-3 bg-red-50 text-red-400 rounded-full hover:bg-red-100 transition-colors">
-              <Trash2 className="w-5 h-5" />
+            <button onClick={onDismiss} className="p-2 bg-stone-50 rounded-full text-stone-400 hover:bg-stone-100 transition-colors">
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
