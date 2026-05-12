@@ -3,12 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // 1. Connection Test
-      // alert('Pantry Bloom: HTML Loaded');
+      // 1. NUCLEAR RESET (Must run before anything else)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          for(let reg of regs) { reg.unregister(); console.log('SW Killed'); }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          for (let name of names) caches.delete(name);
+          console.log('Caches Purged');
+        });
+      }
       
-      // 2. Immediate Error Catcher (Catches module load failures)
+      // 2. Immediate Error Catcher
       window.onerror = function(msg, url, lineNo, columnNo, error) {
-        alert("CRITICAL ERROR: " + msg + "\nAt: " + url + ":" + lineNo);
+        console.log("CRITICAL ERROR: " + msg);
         return false;
       };
     </script>
@@ -33,21 +43,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      // 3. FORCE RESET (Kill the Service Worker death-grip)
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          for(let registration of registrations) {
-            registration.unregister();
-            console.log('SW Unregistered for Reset');
-          }
-        });
-      }
-      if ('caches' in window) {
-        caches.keys().then(names => {
-          for (let name of names) caches.delete(name);
-        });
-      }
-    </script>
   </body>
 </html>
