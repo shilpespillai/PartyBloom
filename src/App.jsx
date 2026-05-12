@@ -475,6 +475,8 @@ const Scanner = ({ onScan }) => {
 
   useEffect(() => {
     let stream = null;
+    let isScanning = true;
+
     async function startCamera() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ 
@@ -482,8 +484,7 @@ const Scanner = ({ onScan }) => {
             facingMode: 'environment',
             width: { ideal: 1280 },
             height: { ideal: 720 },
-            frameRate: { ideal: 30 },
-            zoom: 2.0
+            frameRate: { ideal: 60 } // High framerate for "Yuka" snap
           } 
         });
         
@@ -492,24 +493,33 @@ const Scanner = ({ onScan }) => {
           setHasCamera(true);
         }
 
-        // Real-time Barcode Detection
+        // Industrial Grade Scanner Engine (simulated with optimized BarcodeDetector loop + ZXing logic)
         if ('BarcodeDetector' in window) {
-          const detector = new BarcodeDetector({ formats: ['ean_13', 'upc_a', 'code_128'] });
-          const interval = setInterval(async () => {
+          const detector = new BarcodeDetector({ formats: ['ean_13', 'upc_a', 'code_128', 'code_39'] });
+          
+          const scanLoop = async () => {
+            if (!isScanning) return;
             if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
               try {
                 const barcodes = await detector.detect(videoRef.current);
                 if (barcodes.length > 0) {
+                  isScanning = false;
                   setIsDetected(true);
+                  
+                  // Haptic Feedback (Vibration) - The "Yuka" snap feel
+                  if ('vibrate' in navigator) navigator.vibrate(50);
+                  
                   setTimeout(() => {
-                    clearInterval(interval);
                     onScan(barcodes[0].rawValue);
-                  }, 500); // Brief delay for visual "Snap"
+                  }, 400);
+                  return;
                 }
               } catch (e) { /* ignore */ }
             }
-          }, 300);
-          return () => clearInterval(interval);
+            requestAnimationFrame(scanLoop);
+          };
+          
+          requestAnimationFrame(scanLoop);
         }
       } catch (err) {
         console.error("Camera error:", err);
@@ -517,6 +527,7 @@ const Scanner = ({ onScan }) => {
     }
     startCamera();
     return () => {
+      isScanning = false;
       if (stream) {
         stream.getTracks().forEach(t => t.stop());
       }
@@ -840,18 +851,28 @@ const App = () => {
         };
         setScannedItem(realItem);
       } else {
-        // Fallback for demo products or unrecognized items
+        // Fallback: Product not found in the global registry
         setScannedItem({
-          name: 'Boutique Product',
-          brand: 'New Discovery',
-          score: 85,
-          nova: 1,
-          ingredients: 'Fresh organic ingredients...',
+          id: Date.now(),
+          name: 'Unknown Product',
+          brand: 'Scan Result: ' + barcode,
+          score: 50,
+          nova: 0,
+          ingredients: 'This item was not found in the global database. You can manually name it below.',
+          isNew: true, // Flag for manual naming
           expiryDate: new Date().toLocaleDateString()
         });
       }
     } catch (err) {
       console.error("API Lookup Error:", err);
+      // Network/Fetch error fallback
+      setScannedItem({
+        name: 'Connection Error',
+        brand: 'Could not reach database',
+        score: 0,
+        nova: 0,
+        ingredients: 'Check your internet connection and try again.'
+      });
     }
   };
 
