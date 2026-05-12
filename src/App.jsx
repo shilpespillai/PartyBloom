@@ -307,16 +307,15 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
         <div className="grid grid-cols-4 gap-3">
           <button 
             onClick={() => {
-              if (!item.expiryDate) {
-                // Shake or alert could be added here
+              if (!manualDate) {
                 return;
               }
               handleAdd();
             }} 
-            disabled={isSaving || !item.expiryDate}
+            disabled={isSaving || !manualDate}
             className={`col-span-3 py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all flex flex-col items-center justify-center gap-1 ${
-              !item.expiryDate ? 'bg-stone-100 text-stone-400 opacity-50 cursor-not-allowed' :
-              isSaving ? 'bg-sage text-white scale-95' : 'wooden-btn text-white'
+              !manualDate ? 'bg-stone-100 text-stone-400 opacity-50 cursor-not-allowed' :
+              isSaving ? 'bg-sage text-white scale-95' : 'bg-sage text-white'
             }`}
           >
             {isSaving ? '✅ Saved' : (
@@ -325,7 +324,7 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
                   <Scan className="w-4 h-4" /> 
                   {item.inPantry ? 'Update Item' : 'Add to Pantry'}
                 </div>
-                {!item.expiryDate && <span className="text-[8px] opacity-70">Expiry Required</span>}
+                {!manualDate && <span className="text-[8px] opacity-70">Expiry Required</span>}
               </>
             )}
           </button>
