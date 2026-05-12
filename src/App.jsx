@@ -282,8 +282,8 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
       </div>
 
       <div className="space-y-3">
-        <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex items-center gap-3">
-          <Timer className="w-4 h-4 text-stone-400" />
+        <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all ${!manualDate ? 'bg-red-50/50 border-red-200' : 'bg-stone-50 border-stone-100'}`}>
+          <Timer className={`w-4 h-4 ${!manualDate ? 'text-red-400' : 'text-stone-400'}`} />
           <input 
             type="date" 
             value={manualDate}
@@ -291,17 +291,38 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
             className="bg-transparent text-sm font-bold text-stone-800 outline-none w-full"
           />
         </div>
+        {!manualDate && (
+          <motion.p 
+            initial={{ opacity: 0, y: -5 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="text-[9px] font-bold text-red-400 ml-4 uppercase tracking-widest"
+          >
+            * Mandatory Field
+          </motion.p>
+        )}
         
         <div className="grid grid-cols-4 gap-3">
           <button 
-            onClick={handleAdd} 
-            disabled={isSaving}
-            className={`col-span-3 py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all flex items-center justify-center gap-2 ${isSaving ? 'bg-sage text-white scale-95' : 'wooden-btn text-white'}`}
+            onClick={() => {
+              if (!item.expiryDate) {
+                // Shake or alert could be added here
+                return;
+              }
+              handleAdd();
+            }} 
+            disabled={isSaving || !item.expiryDate}
+            className={`col-span-3 py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all flex flex-col items-center justify-center gap-1 ${
+              !item.expiryDate ? 'bg-stone-100 text-stone-400 opacity-50 cursor-not-allowed' :
+              isSaving ? 'bg-sage text-white scale-95' : 'wooden-btn text-white'
+            }`}
           >
             {isSaving ? '✅ Saved' : (
               <>
-                <Scan className="w-4 h-4" /> 
-                {item.inPantry ? 'Update Item' : 'Add to Pantry'}
+                <div className="flex items-center gap-2">
+                  <Scan className="w-4 h-4" /> 
+                  {item.inPantry ? 'Update Item' : 'Add to Pantry'}
+                </div>
+                {!item.expiryDate && <span className="text-[8px] opacity-70">Expiry Required</span>}
               </>
             )}
           </button>
@@ -1216,7 +1237,7 @@ const App = () => {
             sodium: Math.round((n.salt_100g || 0) * 400), // mg sodium
             fiber: n.fiber_100g || 0
           },
-          expiryDate: existingItem ? existingItem.expiryDate : new Date(Date.now() + 1000*60*60*24*30).toISOString().split('T')[0]
+          expiryDate: existingItem ? existingItem.expiryDate : ''
         };
         setScannedItem(realItem);
       } else {
