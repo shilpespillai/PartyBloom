@@ -804,9 +804,11 @@ const Scanner = ({ onScan }) => {
                   pointsOfInterest: { x: 0.5, y: 0.5 }
                 }]
               };
-              // Add Digital Zoom if supported (allows user to stay back and stay sharp)
+              // SUPER-CLARITY ZOOM: Force 1.5x or 2.0x default zoom if possible
               if (capabilities.zoom) {
-                constraints.advanced[0].zoom = Math.min(2.0, capabilities.zoom.max);
+                const targetZoom = Math.min(2.0, capabilities.zoom.max);
+                constraints.advanced[0].zoom = targetZoom;
+                console.log("Applying Super-Zoom:", targetZoom);
               }
               await track.applyConstraints(constraints);
             } catch (e) { console.warn("Lens adjustment failed:", e); }
@@ -895,7 +897,7 @@ const Scanner = ({ onScan }) => {
         autoPlay 
         muted
         playsInline 
-        className="absolute inset-0 w-full h-full object-cover contrast-[1.1]"
+        className="absolute inset-0 w-full h-full object-cover contrast-[1.2] brightness-[1.05] saturate-[1.1]"
       />
       
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
