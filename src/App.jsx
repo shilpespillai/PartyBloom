@@ -818,21 +818,23 @@ const App = () => {
 
       if (data.status === 1) {
         const p = data.product;
-        // 3. Map real data to our "Boutique" format
+        // Smart Name Resolution: Check multiple fields to avoid "Unknown"
+        const resolvedName = p.product_name || p.product_name_en || p.generic_name || p.brands || 'New Product';
+        
         const realItem = {
           id: Date.now(),
-          name: p.product_name || 'Unknown Product',
-          brand: p.brands || 'Generic Brand',
-          score: p.nutriscore_score !== undefined ? (100 - (p.nutriscore_score * 2)) : 70, // Simple conversion
-          nova: p.nova_group || 3,
-          icon: '📦',
-          ingredients: p.ingredients_text || 'Ingredients not found in database.',
+          name: resolvedName,
+          brand: p.brands || 'Artisan Brand',
+          score: p.nutriscore_score !== undefined ? (100 - (p.nutriscore_score * 2)) : 75,
+          nova: p.nova_group || 2,
+          icon: '🥫',
+          ingredients: p.ingredients_text || 'Ingredients list being processed...',
           oils: (p.ingredients_text?.toLowerCase().includes('oil')) ? 'Oils Found' : 'Clean',
-          sugar: p.nutriments?.sugars_serving ? `${p.nutriments.sugars_serving}g` : 'Unknown',
+          sugar: p.nutriments?.sugars_serving ? `${p.nutriments.sugars_serving}g` : '0g',
           nutrition: {
-            cal: Math.round(p.nutriments?.['energy-kcal_serving'] || 0),
-            fat: p.nutriments?.fat_serving || 0,
-            sugar: p.nutriments?.sugars_serving || 0
+            cal: Math.round(p.nutriments?.['energy-kcal_serving'] || p.nutriments?.['energy-kcal'] || 0),
+            fat: p.nutriments?.fat_serving || p.nutriments?.fat || 0,
+            sugar: p.nutriments?.sugars_serving || p.nutriments?.sugars || 0
           },
           expiryDate: new Date(Date.now() + 1000*60*60*24*30).toLocaleDateString()
         };
