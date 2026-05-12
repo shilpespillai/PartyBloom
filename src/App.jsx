@@ -68,28 +68,30 @@ const LivelyTree = ({ healthScore }) => {
 const AuditCard = ({ item, onDismiss, onAdd }) => {
   const [manualDate, setManualDate] = useState('');
   const [viewDetails, setViewDetails] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const getAlternative = (item) => {
-    // If the product is already clean (Score > 80), don't suggest a swap
     if (item.score > 80) return { name: 'Top Tier Choice!', reason: 'This product already meets our highest clean-label standards.' };
-
-    const name = item.name.toLowerCase();
+    const name = (item.name || '').toLowerCase();
     const brand = (item.brand || '').toLowerCase();
-
     if (name.includes('sauce') || name.includes('tomato')) {
       if (brand.includes('rao')) return { name: 'Cucina Antica', reason: 'Another premium, no-sugar alternative' };
       return { name: 'Rao\'s Homemade', reason: 'No added sugar or seed oils' };
     }
-    
     if (name.includes('mayo')) {
       if (brand.includes('chosen') || brand.includes('primal')) return { name: 'Homemade Mayo', reason: 'The ultimate clean-label hack' };
       return { name: 'Chosen Foods Mayo', reason: '100% Pure Avocado Oil' };
     }
-
-    if (name.includes('cookie') || name.includes('biscuit')) return { name: 'Simple Mills', reason: 'Nut-based, low glycemic' };
-    if (name.includes('oil')) return { name: 'Chosen Foods Avocado Oil', reason: 'High smoke point, heart healthy' };
-    
     return { name: 'Organic Local Choice', reason: 'Minimally processed alternative' };
+  };
+
+  const handleAdd = () => {
+    setIsSaving(true);
+    if ('vibrate' in navigator) navigator.vibrate([30, 30, 30]);
+    onAdd({ ...item, expiryDate: manualDate || item.expiryDate });
+    setTimeout(() => {
+      setIsSaving(false);
+    }, 1500);
   };
 
   const alt = getAlternative(item);
@@ -113,7 +115,6 @@ const AuditCard = ({ item, onDismiss, onAdd }) => {
         <button onClick={onDismiss} className="p-2 bg-stone-50 rounded-full"><X className="w-5 h-5 text-stone-400" /></button>
       </div>
 
-      {/* Quick Stats Grid */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="p-4 bg-stone-50 rounded-2xl flex items-center gap-3">
           <Leaf className="w-5 h-5 text-sage" />
@@ -131,7 +132,6 @@ const AuditCard = ({ item, onDismiss, onAdd }) => {
         </div>
       </div>
 
-      {/* Technical Data Toggle */}
       <div className="border-t border-stone-100 pt-6 mb-8">
         <button 
           onClick={() => setViewDetails(!viewDetails)}
@@ -150,30 +150,20 @@ const AuditCard = ({ item, onDismiss, onAdd }) => {
             >
               <div className="p-4 bg-cream/50 rounded-2xl">
                 <p className="text-[10px] font-bold text-stone-400 mb-2">INGREDIENTS</p>
-                <p className="text-xs leading-relaxed text-stone-600">
-                  {item.ingredients || 'Filtered Water, Soybean Oil, Sugar, Distilled Vinegar, Modified Corn Starch, Egg Yolks, Salt, Natural Flavors, Calcium Disodium EDTA.'}
-                </p>
+                <p className="text-xs leading-relaxed text-stone-600">{item.ingredients}</p>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { l: 'Calories', v: '90' },
+                  { l: 'Calories', v: item.nutrition?.cal || '90' },
                   { l: 'Protein', v: '0.2g' },
-                  { l: 'Carbs', v: '3.1g' }
+                  { l: 'Carbs', v: item.nutrition?.sugar || '3.1g' }
                 ].map(d => (
                   <div key={d.l} className="p-3 border border-stone-100 rounded-xl text-center">
                     <p className="text-[8px] font-bold text-stone-300 uppercase">{d.l}</p>
                     <p className="text-xs font-bold">{d.v}</p>
                   </div>
                 ))}
-              </div>
-
-              <div className="p-4 bg-terracotta/5 rounded-2xl border border-terracotta/10">
-                <p className="text-[10px] font-bold text-terracotta mb-2">ADDITIVES FOUND</p>
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-2 py-1 bg-white rounded-lg text-[9px] font-bold text-stone-600 shadow-sm border border-stone-100">E385 (EDTA)</span>
-                  <span className="px-2 py-1 bg-white rounded-lg text-[9px] font-bold text-stone-600 shadow-sm border border-stone-100">Modified Starch</span>
-                </div>
               </div>
             </motion.div>
           )}
@@ -187,9 +177,7 @@ const AuditCard = ({ item, onDismiss, onAdd }) => {
             <p className="font-bold text-stone-800 text-sm">{alt.name}</p>
             <p className="text-[10px] text-stone-400 font-bold uppercase">{alt.reason}</p>
           </div>
-          <button className="text-sage font-bold text-xs flex items-center gap-1">
-            Shop <ChevronRight className="w-4 h-4" />
-          </button>
+          <button className="text-sage font-bold text-xs flex items-center gap-1">Shop <ChevronRight className="w-4 h-4" /></button>
         </div>
       </div>
 
@@ -204,10 +192,11 @@ const AuditCard = ({ item, onDismiss, onAdd }) => {
           />
         </div>
         <button 
-          onClick={() => onAdd({ ...item, expiryDate: manualDate || item.expiryDate })} 
-          className="wooden-btn w-full py-4 shadow-xl"
+          onClick={handleAdd} 
+          disabled={isSaving}
+          className={`w-full py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all ${isSaving ? 'bg-sage text-white scale-95' : 'wooden-btn text-white'}`}
         >
-          Add to Pantry
+          {isSaving ? '✅ Saved to Pantry' : 'Add to Pantry'}
         </button>
       </div>
     </motion.div>
