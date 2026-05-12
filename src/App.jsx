@@ -1580,7 +1580,7 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-200 sm:flex sm:items-center sm:justify-center sm:p-4">
+    <div className="w-full h-[100dvh] bg-zinc-200 sm:flex sm:items-center sm:justify-center sm:p-4 overflow-hidden">
       <div className="phone-container">
         
         {/* Screen Content */}
