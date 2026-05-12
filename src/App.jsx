@@ -904,6 +904,27 @@ const App = () => {
     localStorage.setItem('pantry_bloom_items', JSON.stringify(pantryItems));
   }, [pantryItems]);
 
+  // --- Native Hardware Back Button Handling ---
+  useEffect(() => {
+    // Push an initial state so there's something to "go back" to
+    window.history.pushState({ screen: currentScreen }, "");
+
+    const handleBackButton = (event) => {
+      if (currentScreen !== 'dashboard') {
+        // Prevent actual browser back, just change our internal screen
+        event.preventDefault();
+        setCurrentScreen('dashboard');
+        // Push the dashboard state back so the next back button can exit if needed
+        window.history.pushState({ screen: 'dashboard' }, "");
+      } else {
+        // On dashboard: allow default (exit app)
+      }
+    };
+
+    window.addEventListener('popstate', handleBackButton);
+    return () => window.removeEventListener('popstate', handleBackButton);
+  }, [currentScreen]);
+
   const handleScan = async (scannedData) => {
     const barcode = scannedData.code || scannedData; // Handle both direct string or object
     
