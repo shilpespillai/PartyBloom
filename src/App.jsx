@@ -20,6 +20,16 @@ import {
   Cloud
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { db } from './firebase';
+import { 
+  collection, 
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  deleteDoc, 
+  query, 
+  orderBy 
+} from 'firebase/firestore';
 
 // --- Components ---
 
@@ -899,7 +909,26 @@ const App = () => {
     ];
   });
 
-  // 2. Persist to LocalStorage whenever items change
+  // 1. Real-time Firebase Sync
+  useEffect(() => {
+    try {
+      const q = query(collection(db, "pantry"), orderBy("id", "desc"));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const itemsFromCloud = [];
+        snapshot.forEach((doc) => {
+          itemsFromCloud.push(doc.data());
+        });
+        if (itemsFromCloud.length > 0) setPantryItems(itemsFromCloud);
+      }, (err) => {
+        console.warn("Firebase sync error - using local fallback.", err);
+      });
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn("Firebase not configured correctly.");
+    }
+  }, []);
+
+  // 2. Persist to LocalStorage (Local Backup)
   useEffect(() => {
     localStorage.setItem('pantry_bloom_items', JSON.stringify(pantryItems));
   }, [pantryItems]);
@@ -985,22 +1014,35 @@ const App = () => {
     }
   };
 
-  const addToPantry = (item) => {
+  const addToPantry = async (item) => {
+    // Instant UI feedback
     setPantryItems(prev => {
       const exists = prev.find(p => p.id === item.id);
-      if (exists) {
-        // Update existing item
-        return prev.map(p => p.id === item.id ? item : p);
-      }
-      // Add new item
+      if (exists) return prev.map(p => p.id === item.id ? item : p);
       return [item, ...prev];
     });
+
+    // Cloud Save
+    try {
+      await setDoc(doc(db, "pantry", item.id.toString()), item);
+    } catch (e) {
+      console.warn("Cloud save failed, local only.");
+    }
+
     setScannedItem(null);
     setCurrentScreen('pantry');
   };
 
-  const removeFromPantry = (id) => {
+  const removeFromPantry = async (id) => {
+    // Instant UI removal
     setPantryItems(prev => prev.filter(p => p.id !== id));
+    
+    // Cloud Removal
+    try {
+      await deleteDoc(doc(db, "pantry", id.toString()));
+    } catch (e) {
+      console.warn("Cloud delete failed.");
+    }
   };
 
   return (
