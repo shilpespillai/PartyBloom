@@ -137,15 +137,15 @@ const Flower = ({ cx, cy, color, delay }) => (
     {[0, 72, 144, 216, 288].map((angle) => (
       <circle 
         key={angle}
-        cx={cx + Math.cos(angle * Math.PI / 180) * 2.5} 
-        cy={cy + Math.sin(angle * Math.PI / 180) * 2.5} 
-        r="2.8" 
+        cx={cx + Math.cos(angle * Math.PI / 180) * 1.8} 
+        cy={cy + Math.sin(angle * Math.PI / 180) * 1.8} 
+        r="2.0" 
         fill={color} 
-        opacity="0.9"
+        opacity="0.95"
       />
     ))}
-    {/* Nectar Center */}
-    <circle cx={cx} cy={cy} r="1.5" fill="#FAF9F6" />
+    {/* Nectar Center Core */}
+    <circle cx={cx} cy={cy} r="1.0" fill="#FAF9F6" />
   </motion.g>
 );
 
