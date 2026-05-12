@@ -667,6 +667,7 @@ const Scanner = ({ onScan }) => {
     startCamera();
     return () => {
       isScanning = false;
+      if (fInt) clearInterval(fInt);
       if (stream) {
         stream.getTracks().forEach(t => t.stop());
       }
