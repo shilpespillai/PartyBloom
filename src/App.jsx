@@ -526,17 +526,35 @@ const Scanner = ({ onScan }) => {
           video: { 
             facingMode: 'environment',
             aspectRatio: { ideal: 1.7777777778 },
-            width: { ideal: 1920, min: 1280 }, // Requesting Full HD for crisp barcodes
+            width: { ideal: 1920, min: 1280 },
             height: { ideal: 1080, min: 720 },
-            frameRate: { ideal: 60 },
-            focusMode: { ideal: 'continuous' }, // Force lens to stay locked
-            whiteBalanceMode: { ideal: 'continuous' }
+            frameRate: { ideal: 60 }
           } 
         });
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           setHasCamera(true);
+
+          // Deep Hardware Focus Lock
+          const track = stream.getVideoTracks()[0];
+          const capabilities = track.getCapabilities?.() || {};
+          
+          if (capabilities.focusMode) {
+            try {
+              const constraints = {
+                advanced: [{ 
+                  focusMode: capabilities.focusMode.includes('continuous') ? 'continuous' : 'manual',
+                  pointsOfInterest: { x: 0.5, y: 0.5 }
+                }]
+              };
+              // Add Digital Zoom if supported (allows user to stay back and stay sharp)
+              if (capabilities.zoom) {
+                constraints.advanced[0].zoom = Math.min(2.0, capabilities.zoom.max);
+              }
+              await track.applyConstraints(constraints);
+            } catch (e) { console.warn("Lens adjustment failed:", e); }
+          }
         }
 
         if ('BarcodeDetector' in window) {
@@ -548,8 +566,6 @@ const Scanner = ({ onScan }) => {
             
             if (video && video.readyState === video.HAVE_ENOUGH_DATA) {
               try {
-                // Optical Pre-Processing: 
-                // We crop only the scanning area to boost speed and apply filters to help the AI "see"
                 const scanWidth = video.videoWidth * 0.8;
                 const scanHeight = video.videoHeight * 0.3;
                 const startX = (video.videoWidth - scanWidth) / 2;
@@ -557,8 +573,6 @@ const Scanner = ({ onScan }) => {
 
                 canvas.width = scanWidth;
                 canvas.height = scanHeight;
-                
-                // Boost contrast and sharpen for the AI
                 ctx.filter = 'contrast(1.4) grayscale(1) brightness(1.1) sharpness(1.2)';
                 ctx.drawImage(video, startX, startY, scanWidth, scanHeight, 0, 0, scanWidth, scanHeight);
 
@@ -615,8 +629,9 @@ const Scanner = ({ onScan }) => {
           />
           
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-opacity duration-500 ${isDetected ? 'opacity-0' : 'opacity-30 text-white'}`}>
-              Optical Focus Engaged
+            <div className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-opacity duration-500 ${isDetected ? 'opacity-0' : 'opacity-40 text-white flex flex-col items-center gap-2'}`}>
+              <span className="bg-black/20 px-3 py-1 rounded-full">Optical Focus Engaged</span>
+              <span className="text-[8px] opacity-60 italic">Move back slightly for a sharper lock</span>
             </div>
           </div>
           
