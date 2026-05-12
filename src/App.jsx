@@ -153,7 +153,7 @@ const LivelyTree = ({ healthScore }) => {
   const isHealthy = healthScore >= 70;
   const isFair = healthScore >= 40 && healthScore < 70;
   const canopyColor = isHealthy ? '#5D6D3F' : isFair ? '#8B8D4E' : '#A67B5B';
-  const bloomColor = '#FFB7C5'; 
+  const bloomColor = '#FF85A2'; 
   const budColor = '#FDFCF7';
 
   const bloomPositions = [
