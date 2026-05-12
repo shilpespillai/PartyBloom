@@ -711,39 +711,62 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
   );
 };
 
-const HistoryScreen = () => (
+const HistoryScreen = ({ items, onDelete }) => (
   <motion.div 
     initial={{ opacity: 0 }} 
     animate={{ opacity: 1 }} 
     className="px-6 py-8 pb-24"
   >
     <div className="flex justify-between items-center mb-8">
-      <h1 className="text-2xl">Bloom History</h1>
-      <button className="text-xs text-sage font-bold flex items-center gap-1">SMS Alerts On <CheckCircle2 className="w-3 h-3" /></button>
+      <h1 className="text-2xl font-serif-luxury text-stone-800">Bloom History</h1>
+      <div className="px-3 py-1 bg-sage/10 rounded-full">
+        <p className="text-[10px] text-sage font-bold uppercase tracking-widest">{items.length} Logs</p>
+      </div>
     </div>
 
     <div className="space-y-4">
-      {[
-        { name: 'Organic Black Beans', brand: 'Eden Foods', score: 95, status: 'Excellent', icon: '🥫', color: 'bg-green-50 text-green-700' },
-        { name: 'Chocolate Chip Cookies', brand: 'Chips Ahoy', score: 32, status: 'Poor', icon: '🍪', color: 'bg-red-50 text-red-700' },
-        { name: 'Almond Butter', brand: 'Barney Butter', score: 92, status: 'Excellent', icon: '🥜', color: 'bg-green-50 text-green-700' },
-        { name: 'Pasta Sauce', brand: 'Prego Traditional', score: 58, status: 'Fair', icon: '🍝', color: 'bg-yellow-50 text-yellow-700' },
-      ].map((item, idx) => (
-        <div key={idx} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex items-center gap-4 group">
-          <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
-            {item.icon}
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-stone-800 text-sm">{item.name}</p>
-            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter mt-0.5">{item.brand}</p>
-            <div className="flex gap-2 mt-2">
-              <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${item.color}`}>
-                {item.score} • {item.status}
-              </span>
-            </div>
-          </div>
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-stone-300">
+          <History className="w-12 h-12 mb-4 opacity-20" />
+          <p className="font-bold">No scans yet</p>
         </div>
-      ))}
+      ) : (
+        items.map((item, idx) => (
+          <motion.div 
+            key={item.id} 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex items-center gap-4 group relative overflow-hidden"
+          >
+            <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner overflow-hidden flex-shrink-0">
+              {item.image ? (
+                <img src={item.image} alt="" className="w-full h-full object-cover scale-110" />
+              ) : (
+                item.icon
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-stone-800 text-sm truncate">{item.name}</p>
+              <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter mt-0.5">{item.brand}</p>
+              <div className="flex gap-2 mt-2">
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${item.score >= 70 ? 'bg-sage/10 text-sage' : item.score >= 40 ? 'bg-wood/10 text-wood' : 'bg-terracotta/10 text-terracotta'}`}>
+                  Score: {item.score}
+                </span>
+                <span className="px-2 py-0.5 bg-stone-100 text-stone-400 rounded-full text-[9px] font-bold">
+                  {new Date(item.scannedAt || item.id).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+            </div>
+            <button 
+              onClick={() => onDelete(item.id)}
+              className="p-2 text-stone-200 hover:text-terracotta transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </motion.div>
+        ))
+      )}
     </div>
   </motion.div>
 );
@@ -1346,6 +1369,8 @@ const App = () => {
   const [activeCategory, setActiveCategory] = useState(null);
   const [showMarket, setShowMarket] = useState(false);
   const [user, setUser] = useState(null);
+  const [pantryItems, setPantryItems] = useState([]);
+  const [historyItems, setHistoryItems] = useState([]);
   const mainScrollRef = React.useRef(null);
 
   // --- Scroll to Top on Screen Change or Category Drill-down ---
@@ -1356,37 +1381,7 @@ const App = () => {
   }, [currentScreen, activeCategory]);
 
   // 1. Initialize from LocalStorage or default
-  const [pantryItems, setPantryItems] = useState(() => {
-    const saved = localStorage.getItem('pantry_bloom_items');
-    if (saved) return JSON.parse(saved);
-    return [
-      { 
-        name: 'Organic Black Beans', 
-        brand: 'Eden Foods', 
-        score: 95, 
-        status: 'Excellent', 
-        icon: '🥫', 
-        expiryDate: 'Oct 12, 2026',
-        ingredients: 'Organic Black Beans, Water, Sea Salt.',
-        oils: 'None',
-        sugar: '0g',
-        additives: []
-      },
-      { 
-        name: 'Chocolate Chip Cookies', 
-        brand: 'Chips Ahoy', 
-        score: 32, 
-        status: 'Poor', 
-        icon: '🍪', 
-        expiry: '2 days', 
-        expiryDate: 'May 14, 2026',
-        ingredients: 'Unbleached Enriched Flour, High Fructose Corn Syrup, Palm Oil, Sugar, Semisweet Chocolate Chips, Artificial Flavor.',
-        oils: 'Palm Oil',
-        sugar: '11g',
-        additives: ['High Fructose Corn Syrup', 'Artificial Flavor']
-      }
-    ];
-  });
+  // Removed hardcoded initializers to force clean cloud data on load
 
   // --- Dynamic Stats Engine ---
   const stats = React.useMemo(() => {
@@ -1468,25 +1463,30 @@ const App = () => {
     return () => clearTimeout(timer);
   }, [pantryItems.length]);
 
-  // 2. Scoped Firestore Sync (Only runs when user is logged in)
+  // 2. Scoped Firestore Sync (Pantry & History)
   useEffect(() => {
     if (!user) return;
 
-    try {
-      const q = query(collection(db, "users", user.uid, "pantry"), orderBy("id", "desc"));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const itemsFromCloud = [];
-        snapshot.forEach((doc) => {
-          itemsFromCloud.push(doc.data());
-        });
-        setPantryItems(itemsFromCloud);
-      }, (err) => {
-        console.warn("Firestore sync error:", err);
-      });
-      return () => unsubscribe();
-    } catch (e) {
-      console.warn("Firestore initialization failed.");
-    }
+    // Sync Pantry
+    const qPantry = query(collection(db, "users", user.uid, "pantry"), orderBy("id", "desc"));
+    const unsubPantry = onSnapshot(qPantry, (snapshot) => {
+      const items = [];
+      snapshot.forEach((doc) => items.push(doc.data()));
+      setPantryItems(items);
+    });
+
+    // Sync History
+    const qHistory = query(collection(db, "users", user.uid, "history"), orderBy("scannedAt", "desc"));
+    const unsubHistory = onSnapshot(qHistory, (snapshot) => {
+      const items = [];
+      snapshot.forEach((doc) => items.push(doc.data()));
+      setHistoryItems(items);
+    });
+
+    return () => {
+      unsubPantry();
+      unsubHistory();
+    };
   }, [user]);
 
   // 3. Persist to LocalStorage (Local Backup)
@@ -1553,6 +1553,7 @@ const App = () => {
         
         const realItem = {
           id: Date.now(),
+          scannedAt: Date.now(),
           barcode: barcode,
           inPantry: false,
           name: resolvedName,
@@ -1561,7 +1562,6 @@ const App = () => {
           nova: novaGroup,
           additives: additivesCount,
           icon: '🥫',
-          // Prioritize Studio Front Image
           image: p.image_front_url || p.image_url || p.image_small_url || null,
           ingredients: p.ingredients_text || 'Ingredients list being processed...',
           oils: (p.ingredients_text?.toLowerCase().includes('oil')) ? 'Oils Found' : 'Clean',
@@ -1571,16 +1571,23 @@ const App = () => {
             fat: n.fat_100g || 0,
             saturatedFat: n['saturated-fat_100g'] || 0,
             sugar: n.sugars_100g || 0,
-            sodium: Math.round((n.salt_100g || 0) * 400), // mg sodium
+            sodium: Math.round((n.salt_100g || 0) * 400),
             fiber: n.fiber_100g || 0
           },
           expiryDate: existingItem ? existingItem.expiryDate : ''
         };
+
+        // Auto-log to History (Cloud)
+        if (user) {
+          setDoc(doc(db, "users", user.uid, "history", realItem.id.toString()), realItem)
+            .catch(e => console.warn("History log failed:", e));
+        }
+
         setScannedItem(realItem);
       } else {
-        // Fallback for Rare/Unknown Products
-        setScannedItem({
+        const fallbackItem = {
           id: Date.now(),
+          scannedAt: Date.now(),
           barcode: barcode,
           name: 'New Discovery',
           brand: 'Local / Unlisted',
@@ -1588,22 +1595,21 @@ const App = () => {
           nova: 2,
           additives: 0,
           icon: '✨',
-          image: null, // No hand-shots! Show boutique icon instead.
-          ingredients: 'This item is not yet in our global database. Check the back of the pack for details!',
+          image: null,
+          ingredients: 'This item is not yet in our global database.',
           nutrition: { energy: 0, fat: 0, saturatedFat: 0, sugar: 0, sodium: 0, fiber: 0 },
           expiryDate: ''
-        });
+        };
+
+        if (user) {
+          setDoc(doc(db, "users", user.uid, "history", fallbackItem.id.toString()), fallbackItem)
+            .catch(e => console.warn("History log failed:", e));
+        }
+
+        setScannedItem(fallbackItem);
       }
     } catch (err) {
       console.error("API Lookup Error:", err);
-      // Network/Fetch error fallback
-      setScannedItem({
-        name: 'Connection Error',
-        brand: 'Could not reach database',
-        score: 0,
-        nova: 0,
-        ingredients: 'Check your internet connection and try again.'
-      });
     }
   };
 
@@ -1642,6 +1648,15 @@ const App = () => {
     }
   };
 
+  const removeFromHistory = async (id) => {
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, "users", user.uid, "history", id.toString()));
+    } catch (e) {
+      console.warn("History delete failed.");
+    }
+  };
+
   return (
     <div className="w-full h-[100dvh] bg-zinc-200 sm:flex sm:items-center sm:justify-center sm:p-4 overflow-hidden">
       <div className="phone-container">
@@ -1657,7 +1672,13 @@ const App = () => {
                 key="dashboard" 
               />
             )}
-            {currentScreen === 'history' && <HistoryScreen key="history" />}
+            {currentScreen === 'history' && (
+              <HistoryScreen 
+                items={historyItems} 
+                onDelete={removeFromHistory}
+                key="history" 
+              />
+            )}
             {currentScreen === 'stats' && <Stats stats={stats} onSelectCategory={(id, title) => setActiveCategory({ id, title })} key="stats" />}
             {currentScreen === 'scanner' && <Scanner onScan={handleScan} key="scanner" />}
             {currentScreen === 'pantry' && <Pantry items={pantryItems} onItemClick={(item) => setScannedItem(item)} key="pantry" />}
