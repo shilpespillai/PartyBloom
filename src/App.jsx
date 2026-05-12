@@ -1616,6 +1616,13 @@ const App = () => {
            </div>
         </div>
 
+        {/* Production Version Marker */}
+        <div className="absolute bottom-24 left-0 right-0 flex justify-center pointer-events-none opacity-20">
+          <p className="text-[7px] font-black text-stone-900 uppercase tracking-[0.3em]">
+            PB-Boutique-v1.0.68
+          </p>
+        </div>
+
       </div>
     </div>
   );
