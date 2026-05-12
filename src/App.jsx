@@ -426,53 +426,53 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
-      className="pb-24"
+      className=""
     >
-      <div className="px-6 py-4 border-b border-stone-100 bg-white/50 flex justify-between items-center">
+      <div className="px-6 py-6 border-b border-stone-100 bg-white/50 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm">
+          <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm">
             <img src="/logo.png" alt="Pantry Bloom" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-2xl font-serif-luxury text-stone-800 leading-none">Pantry Bloom</h1>
-            <p className="text-stone-400 text-[9px] mt-1 font-bold uppercase tracking-widest leading-none">Your clean kitchen companion</p>
+            <h1 className="text-3xl font-serif-luxury text-stone-800 leading-none">Pantry Bloom</h1>
+            <p className="text-stone-400 text-sm mt-1 font-medium italic">Your clean kitchen companion</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button 
             onClick={onShowMarket}
-            className="p-2 bg-wood/10 text-wood-dark rounded-xl hover:bg-wood/20 transition-all shadow-sm"
+            className="p-2.5 bg-wood/10 text-wood-dark rounded-xl hover:bg-wood/20 transition-all shadow-sm"
             title="Local Farmers Market"
           >
-            <MapPin className="w-4 h-4" />
+            <MapPin className="w-5 h-5" />
           </button>
           <button 
             onClick={handleSync}
-            className="flex flex-col items-center gap-0.5 group"
+            className="flex flex-col items-center gap-1 group"
           >
-            <div className={`p-1.5 rounded-lg transition-all ${isSyncing ? 'bg-sage text-white animate-spin' : 'bg-stone-50 text-stone-300 group-hover:text-sage'}`}>
-              <Cloud className="w-3.5 h-3.5" />
+            <div className={`p-2 rounded-xl transition-all ${isSyncing ? 'bg-sage text-white animate-spin' : 'bg-stone-50 text-stone-300 group-hover:text-sage'}`}>
+              <Cloud className="w-4 h-4" />
             </div>
-            <span className="text-[7px] font-bold text-stone-300 uppercase tracking-tighter">
-              {isSyncing ? 'Sync' : 'Saved'}
+            <span className="text-[8px] font-bold text-stone-300 uppercase tracking-tighter">
+              {isSyncing ? 'Syncing...' : `Saved`}
             </span>
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col items-center py-4 bg-cream">
+      <div className="flex flex-col items-center py-8 bg-cream">
         <LivelyTree healthScore={healthScore} />
-        <div className="text-center mt-2">
+        <div className="text-center mt-6">
           <motion.h3 
             key={healthScore}
-            initial={{ opacity: 0, y: 5 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl font-serif-luxury text-[#1a3a1a] tracking-tighter"
+            className="text-7xl font-serif-luxury text-[#1a3a1a] tracking-tighter"
           >
             {healthScore}
           </motion.h3>
-          <p className="text-[10px] text-stone-500 mt-0.5 font-bold uppercase tracking-widest">Pantry Health Score</p>
-          <div className={`mt-2 px-4 py-1.5 rounded-full font-bold text-[10px] inline-block shadow-sm ${
+          <p className="text-sm text-stone-500 mt-2 font-medium">Pantry Health Score</p>
+          <div className={`mt-4 px-6 py-2 rounded-full font-bold text-sm inline-block shadow-sm ${
             healthScore >= 80 ? 'bg-[#E8EDE0] text-[#5D6D3F]' :
             healthScore >= 60 ? 'bg-blue-50 text-blue-600' :
             healthScore >= 40 ? 'bg-orange-50 text-orange-600' :
@@ -486,41 +486,41 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
         </div>
       </div>
 
-      <div className="px-6 grid grid-cols-3 gap-3 mt-4">
-      <button onClick={() => onSelectCategory('clean', 'Clean Food')} className="bg-white p-3 rounded-[1.5rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
-        <div className="w-10 h-10 mb-1">
+      <div className="px-6 grid grid-cols-3 gap-3 mt-6 mb-8">
+      <button onClick={() => onSelectCategory('clean', 'Clean Food')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div className="w-12 h-12 mb-2">
            <ResponsiveContainer width="100%" height="100%">
              <PieChart>
-               <Pie data={[{value: cleanPercent}, {value: 100 - cleanPercent}]} innerRadius={12} outerRadius={18} dataKey="value">
+               <Pie data={[{value: cleanPercent}, {value: 100 - cleanPercent}]} innerRadius={15} outerRadius={22} dataKey="value">
                  <Cell fill="#5D6D3F" /><Cell fill="#f5f5f4" />
                </Pie>
              </PieChart>
            </ResponsiveContainer>
         </div>
-        <p className="text-base font-bold text-stone-800">{cleanPercent}%</p>
-        <p className="text-[7px] text-stone-400 uppercase font-bold tracking-widest mt-0.5">Clean Food</p>
+        <p className="text-lg font-bold text-stone-800">{cleanPercent}%</p>
+        <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Clean Food</p>
       </button>
       
-      <button onClick={() => onSelectCategory('junky', 'Junky Food')} className="bg-white p-3 rounded-[1.5rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
-        <div className="w-10 h-10 mb-1">
+      <button onClick={() => onSelectCategory('junky', 'Junky Food')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div className="w-12 h-12 mb-2">
            <ResponsiveContainer width="100%" height="100%">
              <PieChart>
-               <Pie data={[{value: junkyPercent}, {value: 100 - junkyPercent}]} innerRadius={12} outerRadius={18} dataKey="value">
+               <Pie data={[{value: junkyPercent}, {value: 100 - junkyPercent}]} innerRadius={15} outerRadius={22} dataKey="value">
                  <Cell fill="#D27D56" /><Cell fill="#f5f5f4" />
                </Pie>
              </PieChart>
            </ResponsiveContainer>
         </div>
-        <p className="text-base font-bold text-stone-800">{junkyPercent}%</p>
-        <p className="text-[7px] text-stone-400 uppercase font-bold tracking-widest mt-0.5 text-terracotta">Junky</p>
+        <p className="text-lg font-bold text-stone-800">{junkyPercent}%</p>
+        <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1 text-terracotta">Junky</p>
       </button>
  
-      <button onClick={() => onSelectCategory('expiring', 'Expiring Soon')} className="bg-white p-3 rounded-[1.5rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
-        <div className={`w-10 h-10 mb-1 flex items-center justify-center ${expiringCount > 0 ? 'animate-bounce' : ''}`}>
-          <Timer className={`w-6 h-6 ${expiringCount > 0 ? 'text-red-500' : 'text-terracotta'}`} />
+      <button onClick={() => onSelectCategory('expiring', 'Expiring Soon')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div className={expiringCount > 0 ? 'animate-bounce' : ''}>
+          <Timer className={`w-8 h-8 mb-4 ${expiringCount > 0 ? 'text-red-500' : 'text-terracotta'}`} />
         </div>
-        <p className="text-base font-bold text-stone-800">{expiringCount}</p>
-        <p className="text-[7px] text-stone-400 uppercase font-bold tracking-widest mt-0.5">Expiring</p>
+        <p className="text-lg font-bold text-stone-800">{expiringCount}</p>
+        <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Expiring</p>
       </button>
     </div>
 
