@@ -1216,7 +1216,7 @@ const App = () => {
             sodium: Math.round((n.salt_100g || 0) * 400), // mg sodium
             fiber: n.fiber_100g || 0
           },
-          expiryDate: existingItem ? existingItem.expiryDate : new Date(Date.now() + 1000*60*60*24*30).toLocaleDateString()
+          expiryDate: existingItem ? existingItem.expiryDate : new Date(Date.now() + 1000*60*60*24*30).toISOString().split('T')[0]
         };
         setScannedItem(realItem);
       } else {
