@@ -133,19 +133,20 @@ const Flower = ({ cx, cy, color, delay }) => (
     }}
     style={{ transformOrigin: `${cx}px ${cy}px` }}
   >
-    {/* 5 Petals */}
+    {/* 5 Notched Petals */}
     {[0, 72, 144, 216, 288].map((angle) => (
-      <circle 
+      <path 
         key={angle}
-        cx={cx + Math.cos(angle * Math.PI / 180) * 1.8} 
-        cy={cy + Math.sin(angle * Math.PI / 180) * 1.8} 
-        r="2.0" 
-        fill={color} 
-        opacity="0.95"
+        d="M0,0 C-3,-4 -3,-6 0,-7 C3,-6 3,-4 0,0"
+        transform={`translate(${cx}, ${cy}) rotate(${angle})`}
+        fill={color}
+        stroke="rgba(0,0,0,0.1)"
+        strokeWidth="0.5"
       />
     ))}
-    {/* Nectar Center Core */}
-    <circle cx={cx} cy={cy} r="1.0" fill="#FAF9F6" />
+    {/* Sakura Heart (Dark Pink Center) */}
+    <circle cx={cx} cy={cy} r="1.8" fill="#D23175" />
+    <circle cx={cx} cy={cy} r="0.8" fill="#FAF9F6" opacity="0.5" />
   </motion.g>
 );
 
