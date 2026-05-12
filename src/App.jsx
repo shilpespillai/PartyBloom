@@ -65,8 +65,8 @@ const LivelyTree = ({ healthScore }) => {
   );
 };
 
-const AuditCard = ({ item, onDismiss, onAdd }) => {
-  const [manualDate, setManualDate] = useState('');
+const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
+  const [manualDate, setManualDate] = useState(item.expiryDate || '');
   const [viewDetails, setViewDetails] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -85,13 +85,19 @@ const AuditCard = ({ item, onDismiss, onAdd }) => {
     return { name: 'Organic Local Choice', reason: 'Minimally processed alternative' };
   };
 
+  const handleDateChange = (newDate) => {
+    setManualDate(newDate);
+    // Autosave if editing an existing pantry item
+    if (item.id && !item.isNew) {
+      onAdd({ ...item, expiryDate: newDate });
+    }
+  };
+
   const handleAdd = () => {
     setIsSaving(true);
     if ('vibrate' in navigator) navigator.vibrate([30, 30, 30]);
-    onAdd({ ...item, expiryDate: manualDate || item.expiryDate });
-    setTimeout(() => {
-      setIsSaving(false);
-    }, 1500);
+    onAdd({ ...item, expiryDate: manualDate });
+    setTimeout(() => setIsSaving(false), 1500);
   };
 
   const alt = getAlternative(item);
@@ -187,17 +193,32 @@ const AuditCard = ({ item, onDismiss, onAdd }) => {
           <input 
             type="date" 
             value={manualDate}
-            onChange={(e) => setManualDate(e.target.value)}
+            onChange={(e) => handleDateChange(e.target.value)}
             className="bg-transparent text-sm font-bold text-stone-800 outline-none w-full"
           />
         </div>
-        <button 
-          onClick={handleAdd} 
-          disabled={isSaving}
-          className={`w-full py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all ${isSaving ? 'bg-sage text-white scale-95' : 'wooden-btn text-white'}`}
-        >
-          {isSaving ? '✅ Saved to Pantry' : 'Add to Pantry'}
-        </button>
+        
+        <div className="grid grid-cols-4 gap-3">
+          <button 
+            onClick={handleAdd} 
+            disabled={isSaving}
+            className={`col-span-3 py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all ${isSaving ? 'bg-sage text-white scale-95' : 'wooden-btn text-white'}`}
+          >
+            {isSaving ? '✅ Saved' : (item.id && !item.isNew ? 'Update Item' : 'Add to Pantry')}
+          </button>
+          
+          <button 
+            onClick={() => {
+              if (window.confirm('Remove this item from your pantry?')) {
+                onDelete(item.id);
+                onDismiss();
+              }
+            }}
+            className="col-span-1 bg-stone-100 text-stone-400 rounded-3xl flex items-center justify-center hover:bg-terracotta/10 hover:text-terracotta transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
       </div>
     </motion.div>
   );
@@ -886,6 +907,10 @@ const App = () => {
     setCurrentScreen('pantry');
   };
 
+  const removeFromPantry = (id) => {
+    setPantryItems(prev => prev.filter(p => p.id !== id));
+  };
+
   return (
     <div className="min-h-screen bg-zinc-200 sm:flex sm:items-center sm:justify-center sm:p-4">
       <div className="phone-container">
@@ -936,6 +961,7 @@ const App = () => {
                 item={scannedItem} 
                 onDismiss={() => setScannedItem(null)}
                 onAdd={addToPantry}
+                onDelete={removeFromPantry}
               />
             )}
           </AnimatePresence>
