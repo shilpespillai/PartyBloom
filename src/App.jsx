@@ -119,12 +119,21 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
     >
       <div className="w-12 h-1.5 bg-stone-100 rounded-full mx-auto mb-6" />
       
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h2 className="text-2xl font-bold mb-1">{item.name}</h2>
-          <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{item.brand}</p>
+      <div className="flex gap-4 items-start mb-6">
+        {item.image && (
+          <div className="w-20 h-20 rounded-2xl overflow-hidden bg-stone-50 border border-stone-100 flex-shrink-0">
+            <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+          </div>
+        )}
+        <div className="flex-1">
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-2xl font-bold mb-1">{item.name}</h2>
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{item.brand}</p>
+            </div>
+            <button onClick={onDismiss} className="p-2 bg-stone-50 rounded-full"><X className="w-5 h-5 text-stone-400" /></button>
+          </div>
         </div>
-        <button onClick={onDismiss} className="p-2 bg-stone-50 rounded-full"><X className="w-5 h-5 text-stone-400" /></button>
       </div>
 
       {/* Premium Tab Navigation */}
@@ -833,7 +842,13 @@ const Pantry = ({ items, onItemClick }) => {
               onClick={() => onItemClick(item)}
               className="bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all"
             >
-              <span className="text-3xl mb-2">{item.icon}</span>
+              {item.image ? (
+                <div className="w-12 h-12 mb-2 rounded-lg overflow-hidden bg-white/50">
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                </div>
+              ) : (
+                <span className="text-3xl mb-2">{item.icon}</span>
+              )}
               <p className="text-[10px] font-bold text-stone-800 truncate w-full">{item.name}</p>
               <p className="text-[8px] text-stone-400 font-bold uppercase">{item.expiryDate}</p>
               <div className="mt-2 w-full h-1 bg-stone-50 rounded-full overflow-hidden">
@@ -855,7 +870,13 @@ const Pantry = ({ items, onItemClick }) => {
               onClick={() => onItemClick(item)}
               className="bg-white/60 p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all"
             >
-              <span className="text-3xl mb-2 grayscale">{item.icon}</span>
+              {item.image ? (
+                <div className="w-12 h-12 mb-2 rounded-lg overflow-hidden bg-white/50 grayscale-[0.3]">
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain opacity-80" />
+                </div>
+              ) : (
+                <span className="text-3xl mb-2 grayscale">{item.icon}</span>
+              )}
               <p className="text-[10px] font-bold text-stone-800 truncate w-full">{item.name}</p>
               <p className="text-[8px] text-terracotta font-bold uppercase">{item.expiryDate}</p>
               <div className="mt-2 w-full h-1 bg-stone-50 rounded-full overflow-hidden">
@@ -997,6 +1018,7 @@ const App = () => {
           score: p.nutriscore_score !== undefined ? (100 - (p.nutriscore_score * 2)) : 75,
           nova: p.nova_group || 2,
           icon: '🥫',
+          image: p.image_front_url || p.image_url || null,
           ingredients: p.ingredients_text || 'Ingredients list being processed...',
           oils: (p.ingredients_text?.toLowerCase().includes('oil')) ? 'Oils Found' : 'Clean',
           sugar: p.nutriments?.sugars_serving ? `${p.nutriments.sugars_serving}g` : '0g',
