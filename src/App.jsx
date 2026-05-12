@@ -122,7 +122,7 @@ const LivelyTree = ({ healthScore }) => {
   const fruitColor = '#FFB7C5'; // Soft pink for fruits
 
   return (
-    <div className="relative w-64 h-64 flex items-center justify-center">
+    <div className="relative w-80 h-80 flex items-center justify-center">
       <svg viewBox="0 0 120 120" className="w-full h-full">
         {/* Grass Shadow */}
         <ellipse cx="60" cy="105" rx="40" ry="8" fill="#E8EDE0" />
@@ -577,41 +577,41 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
         </div>
       </div>
 
-      <div className="px-6 grid grid-cols-3 gap-3 mt-4 mb-4">
-      <button onClick={() => onSelectCategory('clean', 'Clean Food')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
-        <div className="w-12 h-12 mb-2">
+      <div className="px-6 grid grid-cols-3 gap-2 mt-2 mb-4">
+      <button onClick={() => onSelectCategory('clean', 'Clean Food')} className="bg-white p-2.5 rounded-[1.5rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div className="w-9 h-9 mb-1">
            <ResponsiveContainer width="100%" height="100%">
              <PieChart>
-               <Pie data={[{value: cleanPercent}, {value: 100 - cleanPercent}]} innerRadius={15} outerRadius={22} dataKey="value">
+               <Pie data={[{value: cleanPercent}, {value: 100 - cleanPercent}]} innerRadius={10} outerRadius={16} dataKey="value">
                  <Cell fill="#5D6D3F" /><Cell fill="#f5f5f4" />
                </Pie>
              </PieChart>
            </ResponsiveContainer>
         </div>
-        <p className="text-lg font-bold text-stone-800">{cleanPercent}%</p>
-        <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Clean Food</p>
+        <p className="text-base font-bold text-stone-800">{cleanPercent}%</p>
+        <p className="text-[7px] text-stone-400 uppercase font-bold tracking-widest mt-0.5">Clean Food</p>
       </button>
       
-      <button onClick={() => onSelectCategory('junky', 'Junky Food')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
-        <div className="w-12 h-12 mb-2">
+      <button onClick={() => onSelectCategory('junky', 'Junky Food')} className="bg-white p-2.5 rounded-[1.5rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div className="w-9 h-9 mb-1">
            <ResponsiveContainer width="100%" height="100%">
              <PieChart>
-               <Pie data={[{value: junkyPercent}, {value: 100 - junkyPercent}]} innerRadius={15} outerRadius={22} dataKey="value">
+               <Pie data={[{value: junkyPercent}, {value: 100 - junkyPercent}]} innerRadius={10} outerRadius={16} dataKey="value">
                  <Cell fill="#D27D56" /><Cell fill="#f5f5f4" />
                </Pie>
              </PieChart>
            </ResponsiveContainer>
         </div>
-        <p className="text-lg font-bold text-stone-800">{junkyPercent}%</p>
-        <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1 text-terracotta">Junky</p>
+        <p className="text-base font-bold text-stone-800">{junkyPercent}%</p>
+        <p className="text-[7px] text-stone-400 uppercase font-bold tracking-widest mt-0.5 text-terracotta">Junky</p>
       </button>
  
-      <button onClick={() => onSelectCategory('expiring', 'Expiring Soon')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+      <button onClick={() => onSelectCategory('expiring', 'Expiring Soon')} className="bg-white p-2.5 rounded-[1.5rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
         <div className={expiringCount > 0 ? 'animate-bounce' : ''}>
-          <Timer className={`w-8 h-8 mb-4 ${expiringCount > 0 ? 'text-red-500' : 'text-terracotta'}`} />
+          <Timer className={`w-6 h-6 mb-2 ${expiringCount > 0 ? 'text-red-500' : 'text-terracotta'}`} />
         </div>
-        <p className="text-lg font-bold text-stone-800">{expiringCount}</p>
-        <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Expiring</p>
+        <p className="text-base font-bold text-stone-800">{expiringCount}</p>
+        <p className="text-[7px] text-stone-400 uppercase font-bold tracking-widest mt-0.5">Expiring</p>
       </button>
     </div>
 
