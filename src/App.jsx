@@ -994,7 +994,12 @@ const Scanner = ({ onScan }) => {
               <div className="flex gap-3">
                 <button onClick={() => setShowManual(false)} className="flex-1 py-4 bg-white/5 text-white/60 rounded-2xl font-bold text-xs uppercase tracking-widest">Cancel</button>
                 <button 
-                  onClick={() => { if(manualCode) onScan(manualCode); }} 
+                  onClick={() => { 
+                    if(manualCode) {
+                      onScan(manualCode); 
+                      setShowManual(false); 
+                    }
+                  }} 
                   className="flex-1 py-4 bg-sage text-white rounded-2xl font-bold text-xs uppercase tracking-widest"
                 >
                   Audit Product
