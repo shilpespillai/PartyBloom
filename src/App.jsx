@@ -622,7 +622,7 @@ const MarketMapScreen = ({ onBack }) => {
   );
 };
 
-const Pantry = ({ items }) => {
+const Pantry = ({ items, onItemClick }) => {
   const goodItems = items.filter(i => i.score >= 50);
   const badItems = items.filter(i => i.score < 50);
 
@@ -633,7 +633,7 @@ const Pantry = ({ items }) => {
       className="px-4 py-8 pb-32"
     >
       <div className="flex justify-between items-center mb-12 px-2">
-        <h1 className="text-4xl text-stone-800">My Pantry</h1>
+        <h1 className="text-4xl text-stone-800 font-serif">My Pantry</h1>
         <button className="p-3 bg-sage text-white rounded-2xl shadow-lg"><Plus className="w-5 h-5" /></button>
       </div>
 
@@ -645,7 +645,8 @@ const Pantry = ({ items }) => {
             <motion.div 
               key={idx} 
               whileHover={{ y: -5 }}
-              className="bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center"
+              onClick={() => onItemClick(item)}
+              className="bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all"
             >
               <span className="text-3xl mb-2">{item.icon}</span>
               <p className="text-[10px] font-bold text-stone-800 truncate w-full">{item.name}</p>
@@ -666,7 +667,8 @@ const Pantry = ({ items }) => {
             <motion.div 
               key={idx} 
               whileHover={{ y: -5 }}
-              className="bg-white/60 p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center"
+              onClick={() => onItemClick(item)}
+              className="bg-white/60 p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all"
             >
               <span className="text-3xl mb-2 grayscale">{item.icon}</span>
               <p className="text-[10px] font-bold text-stone-800 truncate w-full">{item.name}</p>
@@ -803,7 +805,7 @@ const App = () => {
             {currentScreen === 'history' && <HistoryScreen key="history" />}
             {currentScreen === 'stats' && <Stats onSelectCategory={(id, title) => setActiveCategory({ id, title })} key="stats" />}
             {currentScreen === 'scanner' && <Scanner onScan={handleScan} key="scanner" />}
-            {currentScreen === 'pantry' && <Pantry items={pantryItems} key="pantry" />}
+            {currentScreen === 'pantry' && <Pantry items={pantryItems} onItemClick={(item) => setScannedItem(item)} key="pantry" />}
           </AnimatePresence>
 
           {/* Category Drill-down */}
