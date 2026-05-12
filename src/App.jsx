@@ -66,7 +66,7 @@ const CleanSwapGallery = ({ currentItem, onDismiss, onSelect }) => {
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
-      className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[200] flex flex-col justify-end"
+      className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm z-[200] flex flex-col justify-end"
     >
       <div className="bg-[#FDFCF7] rounded-t-[3rem] p-8 pb-12 max-h-[85vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-8">
