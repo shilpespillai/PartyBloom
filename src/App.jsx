@@ -741,6 +741,7 @@ const Scanner = ({ onScan }) => {
   useEffect(() => {
     let stream = null;
     let isScanning = true;
+    let fInt = null;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { alpha: false });
 
@@ -795,7 +796,7 @@ const Scanner = ({ onScan }) => {
               }
             } catch (e) { /* ignore */ }
           };
-          const fInt = setInterval(forceFocus, 2000);
+          fInt = setInterval(forceFocus, 2000);
           forceFocus();
         }
 
