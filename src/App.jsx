@@ -15,9 +15,9 @@ import {
   ShoppingBag,
   Info,
   Camera,
-  X,
   UserPlus,
-  Cloud
+  Cloud,
+  Trash2
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { db, auth } from './firebase';
@@ -131,7 +131,9 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
               <h2 className="text-2xl font-bold mb-1">{item.name}</h2>
               <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{item.brand}</p>
             </div>
-            <button onClick={onDismiss} className="p-2 bg-stone-50 rounded-full"><X className="w-5 h-5 text-stone-400" /></button>
+            <button onClick={onDismiss} className="p-3 bg-red-50 text-red-400 rounded-full hover:bg-red-100 transition-colors">
+              <Trash2 className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -253,9 +255,9 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
           <button 
             onClick={handleAdd} 
             disabled={isSaving}
-            className={`col-span-3 py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all ${isSaving ? 'bg-sage text-white scale-95' : 'wooden-btn text-white'}`}
+            className={`col-span-3 py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all flex items-center justify-center gap-2 ${isSaving ? 'bg-sage text-white scale-95' : 'wooden-btn text-white'}`}
           >
-            {isSaving ? '✅ Saved' : (item.id && !item.isNew ? 'Update Item' : 'Add to Pantry')}
+            {isSaving ? '✅ Saved' : <><Scan className="w-4 h-4" /> {item.id && !item.isNew ? 'Update Item' : 'Add to Pantry'}</>}
           </button>
           
           <button 
@@ -265,9 +267,9 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
                 onDismiss();
               }
             }}
-            className="col-span-1 bg-stone-100 text-stone-400 rounded-3xl flex items-center justify-center hover:bg-terracotta/10 hover:text-terracotta transition-colors"
+            className="col-span-1 bg-red-50 text-red-400 rounded-3xl flex items-center justify-center hover:bg-red-100 transition-colors shadow-sm"
           >
-            <X className="w-6 h-6" />
+            <Trash2 className="w-6 h-6" />
           </button>
         </div>
       </div>
@@ -279,12 +281,20 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
 
 const FilteredListView = ({ title, filter, items, onBack }) => {
   const filteredItems = items.filter(item => {
+    // Helper to get days remaining
+    const getDays = (dateStr) => {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return 999;
+      return Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+    };
+    const days = getDays(item.expiryDate);
+
     if (filter === 'clean') return item.score >= 70;
     if (filter === 'junky') return item.score < 40;
-    if (filter === 'expiring') return item.expiry && (item.expiry.includes('day') || item.expiry.includes('Week'));
-    if (filter === 'week') return item.expiry && item.expiry.includes('day');
-    if (filter === 'month') return item.expiry && (item.expiry.includes('day') || item.expiry.includes('month'));
-    if (filter === 'year') return true; // Show all for year
+    if (filter === 'expiring') return days <= 7;
+    if (filter === 'week') return days <= 7;
+    if (filter === 'month') return days <= 30;
+    if (filter === 'year') return true;
     return true;
   });
 
