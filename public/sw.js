@@ -1,42 +1,23 @@
-const CACHE_NAME = 'pantry-bloom-v2';
-const ASSETS_TO_CACHE = [
-  '/',
-  'index.html',
-  'logo.png',
-  'manifest.json'
-];
+// SELF-DESTRUCT SERVICE WORKER
+// This script clears all caches and unregisters itself immediately.
 
-// Install Event
-self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Force the new SW to take over immediately
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
-// Activate Event (Cleanup old caches)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Clearing old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then((names) => {
+      for (let name of names) caches.delete(name);
+    }).then(() => {
+      self.registration.unregister();
+      self.clients.claim();
+      console.log('SW Self-Destructed');
+    })
   );
 });
 
-// Fetch Event
+// Passive fetch (No caching)
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
+  event.respondWith(fetch(event.request));
 });
