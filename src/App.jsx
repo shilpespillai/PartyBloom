@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Info,
   Camera,
+  X,
   UserPlus,
   Cloud,
   Trash2
