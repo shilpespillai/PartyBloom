@@ -434,7 +434,7 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
             <img src="/logo.png" alt="Pantry Bloom" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-3xl font-serif-luxury text-stone-800 leading-none">Pantry Bloom</h1>
+            <h1 className="text-2xl font-serif-luxury text-stone-800 leading-none">Pantry Bloom</h1>
             <p className="text-stone-400 text-sm mt-1 font-medium italic">Your clean kitchen companion</p>
           </div>
         </div>
@@ -535,7 +535,7 @@ const HistoryScreen = () => (
     className="px-6 py-8 pb-24"
   >
     <div className="flex justify-between items-center mb-8">
-      <h1 className="text-3xl">Bloom History</h1>
+      <h1 className="text-2xl">Bloom History</h1>
       <button className="text-xs text-sage font-bold flex items-center gap-1">SMS Alerts On <CheckCircle2 className="w-3 h-3" /></button>
     </div>
 
@@ -573,7 +573,7 @@ const Stats = ({ stats, onSelectCategory }) => {
     animate={{ opacity: 1 }} 
     className="px-6 py-8 pb-24"
   >
-    <h1 className="text-3xl mb-8">Pantry Health Stats</h1>
+    <h1 className="text-2xl mb-8">Pantry Health Stats</h1>
     
     <div className="cozy-card mb-8 p-8 flex flex-col items-center">
       <h4 className="text-sm font-bold text-stone-400 uppercase tracking-widest mb-6 text-center">Health Distribution</h4>
@@ -853,7 +853,7 @@ const MarketMapScreen = ({ onBack }) => {
     >
       <div className="p-8 flex items-center gap-4">
         <button onClick={onBack} className="p-2 bg-white rounded-full shadow-sm"><ChevronRight className="w-5 h-5 rotate-180" /></button>
-        <h2 className="text-3xl">Market Finder</h2>
+        <h2 className="text-2xl">Market Finder</h2>
       </div>
 
       <div className="flex-1 px-6 space-y-6 overflow-y-auto pb-32">
@@ -936,7 +936,7 @@ const Pantry = ({ items, onItemClick }) => {
       className="px-4 py-8 pb-32"
     >
       <div className="flex justify-between items-center mb-12 px-2">
-        <h1 className="text-4xl text-stone-800 font-serif">My Pantry</h1>
+        <h1 className="text-3xl text-stone-800 font-serif">My Pantry</h1>
         <button 
           onClick={onItemClick ? () => onItemClick({ isNew: true, name: '', brand: '', score: 75, icon: '📦' }) : null}
           className="p-3 bg-sage text-white rounded-2xl shadow-lg active:scale-90 transition-transform"
