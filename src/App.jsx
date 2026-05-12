@@ -414,7 +414,8 @@ const FilteredListView = ({ title, filter, items, onBack }) => {
 const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState('Just now');
-  const { healthScore, cleanPercent, junkyPercent, expiringCount } = stats;
+  const { healthScore, cleanPercent, junkyPercent, expiringCount, totalCount } = stats;
+  const isEmpty = totalCount === 0;
 
   const handleSync = () => {
     setIsSyncing(true);
@@ -463,7 +464,7 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
       </div>
 
       <div className="flex flex-col items-center py-4 bg-cream">
-        <LivelyTree healthScore={healthScore} />
+        <LivelyTree healthScore={isEmpty ? 100 : healthScore} />
         <div className="text-center mt-6">
           <motion.h3 
             key={healthScore}
@@ -471,16 +472,18 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
             animate={{ opacity: 1, y: 0 }}
             className="text-7xl font-serif-luxury text-[#1a3a1a] tracking-tighter"
           >
-            {healthScore}
+            {isEmpty ? '--' : healthScore}
           </motion.h3>
           <p className="text-sm text-stone-500 mt-2 font-medium">Pantry Health Score</p>
           <div className={`mt-4 px-6 py-2 rounded-full font-bold text-sm inline-block shadow-sm ${
+            isEmpty ? 'bg-sage/10 text-sage' :
             healthScore >= 80 ? 'bg-[#E8EDE0] text-[#5D6D3F]' :
             healthScore >= 60 ? 'bg-blue-50 text-blue-600' :
             healthScore >= 40 ? 'bg-orange-50 text-orange-600' :
             'bg-red-50 text-terracotta'
           }`}>
-            {healthScore >= 80 ? 'Excellent' :
+            {isEmpty ? 'Ready to Bloom' :
+             healthScore >= 80 ? 'Excellent' :
              healthScore >= 60 ? 'Good' :
              healthScore >= 40 ? 'Fair' :
              'Poor'}
@@ -1180,7 +1183,8 @@ const App = () => {
     const scoreSum = pantryItems.reduce((acc, i) => acc + (i.score || 0), 0);
     
     return {
-      healthScore: Math.round(scoreSum / (pantryItems.length || 1)),
+      healthScore: pantryItems.length === 0 ? 0 : Math.round(scoreSum / pantryItems.length),
+      totalCount: pantryItems.length,
       cleanPercent: Math.round((clean.length / total) * 100),
       junkyPercent: Math.round((junky.length / total) * 100),
       expiringCount: expiringWeek.length,
