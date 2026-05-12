@@ -34,17 +34,18 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
+      // 3. FORCE RESET (Kill the Service Worker death-grip)
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js')
-            .then(reg => {
-              console.log('SW Registered', reg);
-              // alert('PWA: Ready to Bloom! (SW Active)');
-            })
-            .catch(err => {
-              console.log('SW Registration Failed', err);
-              alert('PWA Error: ' + err.message);
-            });
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('SW Unregistered for Reset');
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          for (let name of names) caches.delete(name);
         });
       }
     </script>
