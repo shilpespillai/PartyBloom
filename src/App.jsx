@@ -590,11 +590,8 @@ const Scanner = ({ onScan }) => {
                 const barcodes = await detector.detect(canvas);
                 if (barcodes.length > 0) {
                   isScanning = false;
-                  setIsDetected(true);
-                  if ('vibrate' in navigator) navigator.vibrate(50);
-                  setTimeout(() => {
-                    onScan(barcodes[0].rawValue);
-                  }, 400);
+                  if ('vibrate' in navigator) navigator.vibrate(40);
+                  onScan(barcodes[0].rawValue); // Instant trigger
                   return;
                 }
               } catch (e) { /* ignore */ }
@@ -624,33 +621,19 @@ const Scanner = ({ onScan }) => {
         ref={videoRef} 
         autoPlay 
         playsInline 
-        className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] contrast-[1.1]"
+        className="absolute inset-0 w-full h-full object-cover contrast-[1.1]"
       />
       
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {/* Rectangular Scanner Frame (better for barcodes) */}
-        <div className={`w-[85%] h-44 border-4 rounded-[2rem] relative overflow-hidden transition-all duration-300 ${isDetected ? 'border-sage shadow-[0_0_40px_rgba(93,109,63,0.6)]' : 'border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.1)]'}`}>
-          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(93,109,63,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
-          
-          {/* Animated Scanning Beam */}
-          <motion.div 
-            animate={{ y: isDetected ? 88 : [0, 176, 0] }}
-            transition={{ duration: isDetected ? 0.2 : 2.5, repeat: isDetected ? 0 : Infinity, ease: "easeInOut" }}
-            className={`w-full h-1 absolute z-10 ${isDetected ? 'bg-sage shadow-[0_0_20px_#5D6D3F]' : 'bg-white/60 shadow-[0_0:15px_rgba(255,255,255,0.5)]'}`} 
-          />
-          
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-opacity duration-500 ${isDetected ? 'opacity-0' : 'opacity-40 text-white flex flex-col items-center gap-2'}`}>
-              <span className="bg-black/20 px-3 py-1 rounded-full">Optical Focus Engaged</span>
-              <span className="text-[8px] opacity-60 italic">Move back slightly for a sharper lock</span>
-            </div>
-          </div>
+        {/* Clean Rectangular Frame */}
+        <div className={`w-[85%] h-44 border-4 rounded-[2rem] relative overflow-hidden transition-all duration-300 ${isDetected ? 'border-sage' : 'border-white/20'}`}>
+          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
           
           {/* Corner Brackets */}
-          <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-white/20 rounded-tl-lg" />
-          <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-white/20 rounded-tr-lg" />
-          <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-white/20 rounded-bl-lg" />
-          <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-white/20 rounded-br-lg" />
+          <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-white/40 rounded-tl-lg" />
+          <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-white/40 rounded-tr-lg" />
+          <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-white/40 rounded-bl-lg" />
+          <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-white/40 rounded-br-lg" />
         </div>
       </div>
 
