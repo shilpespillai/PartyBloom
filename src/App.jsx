@@ -118,46 +118,69 @@ const CleanSwapGallery = ({ currentItem, onDismiss, onSelect }) => {
 };
 
 const LivelyTree = ({ healthScore }) => {
-  // healthScore 0-100
-  const isHealthy = healthScore > 70;
-  const canopyColor = isHealthy ? '#5D6D3F' : healthScore > 40 ? '#8B8D4E' : '#A67B5B';
-  const fruitColor = '#FFB7C5'; // Soft pink for fruits
+  const isHealthy = healthScore >= 70;
+  const isFair = healthScore >= 40 && healthScore < 70;
+  const canopyColor = isHealthy ? '#5D6D3F' : isFair ? '#8B8D4E' : '#A67B5B';
+  const bloomColor = '#FFB7C5'; 
+  const budColor = '#FDFCF7';
+
+  // Calculate bloom positions based on health
+  const bloomPositions = [
+    { cx: 60, cy: 35 }, { cx: 45, cy: 45 }, { cx: 75, cy: 45 },
+    { cx: 55, cy: 55 }, { cx: 70, cy: 55 }, { cx: 60, cy: 22 },
+    { cx: 35, cy: 55 }, { cx: 85, cy: 55 }, { cx: 50, cy: 30 },
+    { cx: 70, cy: 30 }, { cx: 40, cy: 40 }, { cx: 80, cy: 40 },
+    { cx: 60, cy: 50 }, { cx: 50, cy: 65 }, { cx: 70, cy: 65 }
+  ];
+
+  // How many blooms to show?
+  const bloomCount = healthScore < 30 ? 0 : 
+                     healthScore < 50 ? 3 : 
+                     healthScore < 75 ? 8 : 15;
 
   return (
     <div className="relative w-80 h-80 flex items-center justify-center">
-      <svg viewBox="0 0 120 120" className="w-full h-full">
+      <svg viewBox="0 0 120 120" className="w-full h-full drop-shadow-2xl">
         {/* Grass Shadow */}
         <ellipse cx="60" cy="105" rx="40" ry="8" fill="#E8EDE0" />
         
         {/* Trunk */}
         <rect x="56" y="75" width="8" height="30" rx="2" fill="#7D5A44" />
         
-        {/* Lush Canopy (Overlapping Circles) */}
+        {/* Lush Canopy */}
         <motion.g
-          initial={{ scale: 0.8, opacity: 0, rotate: -5 }}
-          animate={{ scale: 1, opacity: 1, rotate: 0 }}
-          transition={{ 
-            duration: 1.2, 
-            ease: "easeOut",
-            type: "spring",
-            stiffness: 100
-          }}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.5, type: "spring" }}
         >
-          <circle cx="60" cy="55" r="28" fill={canopyColor} opacity="0.9" />
-          <circle cx="45" cy="50" r="22" fill={canopyColor} opacity="0.8" />
-          <circle cx="75" cy="50" r="22" fill={canopyColor} opacity="0.8" />
-          <circle cx="60" cy="38" r="20" fill={canopyColor} opacity="0.8" />
+          <circle cx="60" cy="55" r="32" fill={canopyColor} opacity="0.9" className="transition-colors duration-1000" />
+          <circle cx="45" cy="52" r="24" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
+          <circle cx="75" cy="52" r="24" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
+          <circle cx="60" cy="40" r="22" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
           
-          {/* Fruits (Pink Dots) - only if healthy */}
-          {healthScore > 60 && (
-            <>
-              <circle cx="50" cy="45" r="3" fill={fruitColor} />
-              <circle cx="70" cy="42" r="3" fill={fruitColor} />
-              <circle cx="60" cy="32" r="3" fill={fruitColor} />
-              <circle cx="45" cy="58" r="3" fill={fruitColor} />
-              <circle cx="75" cy="55" r="3" fill={fruitColor} />
-            </>
-          )}
+          {/* Dynamic Blooms */}
+          <AnimatePresence>
+            {bloomPositions.slice(0, bloomCount).map((pos, i) => (
+              <motion.g
+                key={i}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ delay: i * 0.05 + 0.5, type: "spring" }}
+              >
+                {/* Petals */}
+                <motion.circle 
+                  cx={pos.cx} cy={pos.cy} r={isHealthy ? 4 : 3} 
+                  fill={isHealthy ? bloomColor : budColor} 
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 3, repeat: Infinity, delay: i * 0.2 }}
+                  className="shadow-sm"
+                />
+                {/* Center Core */}
+                <circle cx={pos.cx} cy={pos.cy} r="1.2" fill="#FAF9F6" />
+              </motion.g>
+            ))}
+          </AnimatePresence>
         </motion.g>
       </svg>
     </div>
