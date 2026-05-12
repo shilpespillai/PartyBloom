@@ -910,7 +910,6 @@ const App = () => {
           expiryDate: new Date().toLocaleDateString()
         });
       }
-      }
     } catch (err) {
       console.error("API Lookup Error:", err);
       // Network/Fetch error fallback
