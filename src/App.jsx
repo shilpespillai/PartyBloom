@@ -472,7 +472,6 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
         <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Expiring</p>
       </button>
     </div>
-div>
 
   </motion.div>
   );
