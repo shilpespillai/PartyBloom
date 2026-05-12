@@ -45,7 +45,7 @@ const LivelyTree = ({ healthScore }) => {
   const fruitColor = '#FFB7C5'; // Soft pink for fruits
 
   return (
-    <div className="relative w-56 h-56 flex items-center justify-center">
+    <div className="relative w-44 h-44 flex items-center justify-center">
       <svg viewBox="0 0 120 120" className="w-full h-full">
         {/* Grass Shadow */}
         <ellipse cx="60" cy="105" rx="40" ry="8" fill="#E8EDE0" />
@@ -428,7 +428,7 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
       animate={{ opacity: 1 }} 
       className=""
     >
-      <div className="px-6 py-6 border-b border-stone-100 bg-white/50 flex justify-between items-center">
+      <div className="px-6 pt-10 pb-4 border-b border-stone-100 bg-white/50 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm">
             <img src="/logo.png" alt="Pantry Bloom" className="w-full h-full object-cover" />
@@ -460,7 +460,7 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
         </div>
       </div>
 
-      <div className="flex flex-col items-center py-8 bg-cream">
+      <div className="flex flex-col items-center py-4 bg-cream">
         <LivelyTree healthScore={healthScore} />
         <div className="text-center mt-6">
           <motion.h3 
