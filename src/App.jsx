@@ -968,8 +968,8 @@ const Pantry = ({ items, onItemClick }) => {
             </button>
           </div>
           <button 
-            onClick={onItemClick ? () => onItemClick({ isNew: true, name: '', brand: '', score: 75, icon: '📦' }) : null}
-            className="w-10 h-10 bg-sage text-white rounded-xl shadow-lg flex items-center justify-center active:scale-90 transition-transform"
+            onClick={onItemClick ? () => onItemClick({ isNew: true, id: Date.now(), name: '', brand: '', score: 75, icon: '📦' }) : null}
+            className="w-12 h-12 bg-sage text-white rounded-2xl shadow-lg flex items-center justify-center active:scale-90 transition-transform"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -1327,9 +1327,9 @@ const App = () => {
         const resolvedName = p.product_name || p.product_name_en || p.generic_name || p.brands || 'New Product';
         
         const realItem = {
-          id: existingItem ? existingItem.id : Date.now(),
+          id: Date.now(), // Always a new unique ID for every addition
           barcode: barcode,
-          inPantry: !!existingItem,
+          inPantry: false, // Default to false for a new scan result
           name: resolvedName,
           brand: p.brands || 'Artisan Brand',
           score: finalScore,
