@@ -1550,13 +1550,10 @@ const App = () => {
                 onDismiss={() => setScannedItem(null)}
                 onAdd={addToPantry}
                 onDelete={removeFromPantry}
-                onShowSwaps={() => setShowSwaps(true)}
-              />
-            )}
-            {showSwaps && (
-              <CleanSwapGallery 
-                category={scannedItem?.category} 
-                onClose={() => setShowSwaps(false)} 
+                onShowMarket={() => {
+                  setScannedItem(null);
+                  setShowMarket(true);
+                }}
               />
             )}
           </AnimatePresence>
