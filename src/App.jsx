@@ -1358,23 +1358,23 @@ const App = () => {
         </div>
 
         {/* Tab Bar */}
-        <nav className="absolute bottom-0 left-0 right-0 h-24 bg-white border-t border-stone-100 flex items-center justify-around z-50 px-4">
+        <nav className="absolute bottom-0 left-0 right-0 h-20 bg-white border-t border-stone-100 flex items-center justify-around z-50 px-4">
           {[
             { id: 'dashboard', icon: <Home className="w-5 h-5" />, label: 'Home' },
             { id: 'history', icon: <History className="w-5 h-5" />, label: 'History' },
-            { id: 'scanner', icon: <Scan className="w-7 h-7" />, label: 'Scan', primary: true },
+            { id: 'scanner', icon: <Barcode className="w-6 h-6" />, label: 'Scan' },
             { id: 'pantry', icon: <Refrigerator className="w-5 h-5" />, label: 'Pantry' },
             { id: 'stats', icon: <BarChart3 className="w-5 h-5" />, label: 'Stats' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setCurrentScreen(tab.id)}
-              className="flex flex-col items-center gap-1 p-2 relative"
+              className="flex flex-col items-center gap-1 p-2 flex-1"
             >
-              <div className={`transition-all duration-300 ${tab.primary ? 'p-4 bg-sage text-white rounded-full -mt-12 shadow-lg shadow-sage/30' : (currentScreen === tab.id ? 'text-sage scale-110' : 'text-stone-300')}`}>
+              <div className={`transition-all duration-300 ${currentScreen === tab.id ? 'text-sage scale-110' : 'text-stone-300'}`}>
                 {tab.icon}
               </div>
-              <span className={`text-[10px] font-bold mt-1 ${tab.primary ? 'text-sage' : (currentScreen === tab.id ? 'text-sage' : 'text-stone-300')}`}>
+              <span className={`text-[9px] font-bold mt-0.5 uppercase tracking-widest ${currentScreen === tab.id ? 'text-sage' : 'text-stone-300'}`}>
                 {tab.label}
               </span>
             </button>
