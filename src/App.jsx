@@ -1499,16 +1499,17 @@ const App = () => {
         const resolvedName = p.product_name || p.product_name_en || p.generic_name || p.brands || 'New Product';
         
         const realItem = {
-          id: Date.now(), // Always a new unique ID for every addition
+          id: Date.now(),
           barcode: barcode,
-          inPantry: false, // Default to false for a new scan result
+          inPantry: false,
           name: resolvedName,
           brand: p.brands || 'Artisan Brand',
           score: finalScore,
           nova: novaGroup,
           additives: additivesCount,
           icon: '🥫',
-          image: p.image_front_url || p.image_url || null,
+          // Prioritize Studio Front Image
+          image: p.image_front_url || p.image_url || p.image_small_url || null,
           ingredients: p.ingredients_text || 'Ingredients list being processed...',
           oils: (p.ingredients_text?.toLowerCase().includes('oil')) ? 'Oils Found' : 'Clean',
           sugar: n.sugars_serving ? `${n.sugars_serving}g` : '0g',
@@ -1524,16 +1525,20 @@ const App = () => {
         };
         setScannedItem(realItem);
       } else {
-        // Fallback: Product not found in the global registry
+        // Fallback for Rare/Unknown Products
         setScannedItem({
           id: Date.now(),
-          name: 'Unknown Product',
-          brand: 'Scan Result: ' + barcode,
-          score: 50,
-          nova: 0,
-          ingredients: 'This item was not found in the global database. You can manually name it below.',
-          isNew: true, // Flag for manual naming
-          expiryDate: new Date().toLocaleDateString()
+          barcode: barcode,
+          name: 'New Discovery',
+          brand: 'Local / Unlisted',
+          score: 60,
+          nova: 2,
+          additives: 0,
+          icon: '✨',
+          image: null, // No hand-shots! Show boutique icon instead.
+          ingredients: 'This item is not yet in our global database. Check the back of the pack for details!',
+          nutrition: { energy: 0, fat: 0, saturatedFat: 0, sugar: 0, sodium: 0, fiber: 0 },
+          expiryDate: ''
         });
       }
     } catch (err) {
