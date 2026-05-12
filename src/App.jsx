@@ -434,13 +434,46 @@ const MarketMapScreen = ({ onBack }) => {
       </div>
 
       <div className="flex-1 px-6 space-y-6 overflow-y-auto pb-32">
-        <div className="w-full h-48 bg-stone-200 rounded-[3rem] relative overflow-hidden shadow-inner border-4 border-white">
-           <div className="absolute inset-0 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=Werribee,VIC&zoom=13&size=400x200&sensor=false')] bg-cover opacity-50 grayscale" />
-           <motion.div 
-             animate={{ scale: [1, 1.2, 1] }} 
-             transition={{ duration: 2, repeat: Infinity }}
-             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-sage rounded-full border-2 border-white shadow-lg" 
-           />
+        <div className="w-full h-56 bg-[#f4f1ea] rounded-[3rem] relative overflow-hidden shadow-inner border-4 border-white">
+           {/* Boutique SVG Map Illustration */}
+           <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 400 200">
+             <path d="M0,50 Q100,20 200,50 T400,50" fill="none" stroke="#5D6D3F" strokeWidth="1" strokeDasharray="4 4" />
+             <path d="M50,0 Q80,100 50,200" fill="none" stroke="#5D6D3F" strokeWidth="1" strokeDasharray="4 4" />
+             <rect x="120" y="80" width="60" height="40" rx="10" fill="#E8EDE0" />
+             <rect x="250" y="40" width="80" height="50" rx="10" fill="#E8EDE0" />
+             <circle cx="200" cy="100" r="80" fill="none" stroke="#A67B5B" strokeWidth="0.5" strokeDasharray="2 2" />
+           </svg>
+           
+           {/* Current Location Pulsar */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+             <motion.div 
+               animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }} 
+               transition={{ duration: 2, repeat: Infinity }}
+               className="absolute w-12 h-12 bg-sage rounded-full" 
+             />
+             <div className="relative w-4 h-4 bg-sage rounded-full border-2 border-white shadow-lg" />
+           </div>
+
+           {/* Market Pins */}
+           {markets.map((m, i) => (
+             <motion.div 
+               key={i}
+               initial={{ scale: 0 }}
+               animate={{ scale: 1 }}
+               transition={{ delay: i * 0.2 }}
+               className="absolute"
+               style={{ 
+                 top: `${20 + (i * 30)}%`, 
+                 left: `${15 + (i * 35)}%` 
+               }}
+             >
+               <div className="w-3 h-3 bg-terracotta rounded-full border-2 border-white shadow-sm" />
+             </motion.div>
+           ))}
+           
+           <div className="absolute bottom-4 left-6 px-3 py-1 bg-white/80 backdrop-blur-md rounded-full text-[8px] font-bold text-stone-400 uppercase tracking-widest shadow-sm">
+             Wyndham Vale, VIC
+           </div>
         </div>
 
         {markets.map((market, idx) => (
