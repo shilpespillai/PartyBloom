@@ -117,6 +117,38 @@ const CleanSwapGallery = ({ currentItem, onDismiss, onSelect }) => {
   );
 };
 
+// Boutique Flower Component
+const Flower = ({ cx, cy, color, delay }) => (
+  <motion.g
+    initial={{ scale: 0, opacity: 0, rotate: 0 }}
+    animate={{ 
+      scale: 1, 
+      opacity: 1, 
+      rotate: [0, 10, -10, 0] 
+    }}
+    exit={{ scale: 0, opacity: 0 }}
+    transition={{ 
+      scale: { delay, type: "spring" },
+      rotate: { duration: 5, repeat: Infinity, ease: "easeInOut", delay }
+    }}
+    style={{ transformOrigin: `${cx}px ${cy}px` }}
+  >
+    {/* 5 Petals */}
+    {[0, 72, 144, 216, 288].map((angle) => (
+      <circle 
+        key={angle}
+        cx={cx + Math.cos(angle * Math.PI / 180) * 2.5} 
+        cy={cy + Math.sin(angle * Math.PI / 180) * 2.5} 
+        r="2.8" 
+        fill={color} 
+        opacity="0.9"
+      />
+    ))}
+    {/* Nectar Center */}
+    <circle cx={cx} cy={cy} r="1.5" fill="#FAF9F6" />
+  </motion.g>
+);
+
 const LivelyTree = ({ healthScore }) => {
   const isHealthy = healthScore >= 70;
   const isFair = healthScore >= 40 && healthScore < 70;
@@ -124,30 +156,24 @@ const LivelyTree = ({ healthScore }) => {
   const bloomColor = '#FFB7C5'; 
   const budColor = '#FDFCF7';
 
-  // Calculate bloom positions based on health
   const bloomPositions = [
-    { cx: 60, cy: 35 }, { cx: 45, cy: 45 }, { cx: 75, cy: 45 },
-    { cx: 55, cy: 55 }, { cx: 70, cy: 55 }, { cx: 60, cy: 22 },
-    { cx: 35, cy: 55 }, { cx: 85, cy: 55 }, { cx: 50, cy: 30 },
-    { cx: 70, cy: 30 }, { cx: 40, cy: 40 }, { cx: 80, cy: 40 },
-    { cx: 60, cy: 50 }, { cx: 50, cy: 65 }, { cx: 70, cy: 65 }
+    { cx: 60, cy: 32 }, { cx: 45, cy: 45 }, { cx: 75, cy: 45 },
+    { cx: 55, cy: 55 }, { cx: 72, cy: 58 }, { cx: 62, cy: 20 },
+    { cx: 38, cy: 58 }, { cx: 88, cy: 52 }, { cx: 50, cy: 28 },
+    { cx: 74, cy: 30 }, { cx: 42, cy: 38 }, { cx: 82, cy: 38 },
+    { cx: 65, cy: 48 }, { cx: 52, cy: 68 }, { cx: 72, cy: 68 }
   ];
 
-  // How many blooms to show?
   const bloomCount = healthScore < 30 ? 0 : 
-                     healthScore < 50 ? 3 : 
-                     healthScore < 75 ? 8 : 15;
+                     healthScore < 50 ? 4 : 
+                     healthScore < 75 ? 9 : 15;
 
   return (
     <div className="relative w-80 h-80 flex items-center justify-center">
       <svg viewBox="0 0 120 120" className="w-full h-full drop-shadow-2xl">
-        {/* Grass Shadow */}
-        <ellipse cx="60" cy="105" rx="40" ry="8" fill="#E8EDE0" />
-        
-        {/* Trunk */}
+        <ellipse cx="60" cy="105" rx="42" ry="8" fill="#E8EDE0" />
         <rect x="56" y="75" width="8" height="30" rx="2" fill="#7D5A44" />
         
-        {/* Lush Canopy */}
         <motion.g
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -158,27 +184,15 @@ const LivelyTree = ({ healthScore }) => {
           <circle cx="75" cy="52" r="24" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
           <circle cx="60" cy="40" r="22" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
           
-          {/* Dynamic Blooms */}
           <AnimatePresence>
             {bloomPositions.slice(0, bloomCount).map((pos, i) => (
-              <motion.g
-                key={i}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0, opacity: 0 }}
-                transition={{ delay: i * 0.05 + 0.5, type: "spring" }}
-              >
-                {/* Petals */}
-                <motion.circle 
-                  cx={pos.cx} cy={pos.cy} r={isHealthy ? 4 : 3} 
-                  fill={isHealthy ? bloomColor : budColor} 
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 3, repeat: Infinity, delay: i * 0.2 }}
-                  className="shadow-sm"
-                />
-                {/* Center Core */}
-                <circle cx={pos.cx} cy={pos.cy} r="1.2" fill="#FAF9F6" />
-              </motion.g>
+              <Flower 
+                key={i} 
+                cx={pos.cx} 
+                cy={pos.cy} 
+                color={isHealthy ? bloomColor : budColor} 
+                delay={i * 0.1 + 0.5} 
+              />
             ))}
           </AnimatePresence>
         </motion.g>
