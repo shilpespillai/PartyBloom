@@ -1421,7 +1421,7 @@ const App = () => {
         snapshot.forEach((doc) => {
           itemsFromCloud.push(doc.data());
         });
-        if (itemsFromCloud.length > 0) setPantryItems(itemsFromCloud);
+        setPantryItems(itemsFromCloud);
       }, (err) => {
         console.warn("Firestore sync error:", err);
       });
@@ -1569,7 +1569,7 @@ const App = () => {
     if (!user) return;
 
     // Instant UI removal
-    setPantryItems(prev => prev.filter(p => p.id !== id));
+    setPantryItems(prev => prev.filter(p => p.id?.toString() !== id?.toString()));
     
     // Cloud Removal (Scoped to User)
     try {
