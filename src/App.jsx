@@ -205,8 +205,14 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete, onShowMarket }) => {
       
       <div className="flex gap-4 items-start mb-6">
         {item.image && (
-          <div className="w-20 h-20 rounded-2xl overflow-hidden bg-stone-50 border border-stone-100 flex-shrink-0">
-            <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+          <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white border border-stone-100 flex-shrink-0 shadow-[0_8px_20px_rgba(0,0,0,0.08)] relative">
+            <img 
+              src={item.image} 
+              alt={item.name} 
+              className="w-full h-full object-cover scale-110 transition-transform hover:scale-125" 
+            />
+            {/* Studio Light Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent pointer-events-none" />
           </div>
         )}
         <div className="flex-1">
@@ -1220,7 +1226,7 @@ const PantryListItem = ({ item, onClick }) => {
     >
       <div className="w-12 h-12 rounded-xl bg-stone-50 overflow-hidden flex items-center justify-center flex-shrink-0">
         {item.image ? (
-          <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+          <img src={item.image} alt={item.name} className="w-full h-full object-cover scale-110" />
         ) : (
           <span className="text-2xl">{item.icon}</span>
         )}
@@ -1265,7 +1271,7 @@ const PantryCard = ({ item, onClick }) => {
       
       <div className="w-full aspect-square mb-3 rounded-2xl bg-stone-50 overflow-hidden flex items-center justify-center relative group-hover:bg-cream transition-colors">
         {item.image ? (
-          <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2" />
+          <img src={item.image} alt={item.name} className="w-full h-full object-cover scale-110" />
         ) : (
           <span className="text-4xl">{item.icon}</span>
         )}
