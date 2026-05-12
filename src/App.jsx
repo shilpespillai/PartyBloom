@@ -132,9 +132,14 @@ const LivelyTree = ({ healthScore }) => {
         
         {/* Lush Canopy (Overlapping Circles) */}
         <motion.g
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8 }}
+          initial={{ scale: 0.8, opacity: 0, rotate: -5 }}
+          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+          transition={{ 
+            duration: 1.2, 
+            ease: "easeOut",
+            type: "spring",
+            stiffness: 100
+          }}
         >
           <circle cx="60" cy="55" r="28" fill={canopyColor} opacity="0.9" />
           <circle cx="45" cy="50" r="22" fill={canopyColor} opacity="0.8" />
