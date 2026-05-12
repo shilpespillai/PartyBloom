@@ -20,7 +20,8 @@ import {
   Cloud,
   Trash2,
   MapPin,
-  BarChart3
+  BarChart3,
+  Barcode
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { db, auth } from './firebase';
