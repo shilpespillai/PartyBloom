@@ -1,0 +1,645 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Scan, 
+  Home, 
+  Refrigerator, 
+  Settings, 
+  Leaf, 
+  AlertCircle, 
+  CheckCircle2, 
+  ChevronRight, 
+  Plus, 
+  History,
+  Timer,
+  ShoppingBag,
+  Info,
+  Camera,
+  X,
+  UserPlus,
+  Cloud
+} from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+
+// --- Components ---
+
+const LivelyTree = ({ healthScore }) => {
+  // healthScore 0-100
+  const isHealthy = healthScore > 70;
+  const canopyColor = isHealthy ? '#5D6D3F' : healthScore > 40 ? '#8B8D4E' : '#A67B5B';
+  const fruitColor = '#FFB7C5'; // Soft pink for fruits
+
+  return (
+    <div className="relative w-56 h-56 flex items-center justify-center">
+      <svg viewBox="0 0 120 120" className="w-full h-full">
+        {/* Grass Shadow */}
+        <ellipse cx="60" cy="105" rx="40" ry="8" fill="#E8EDE0" />
+        
+        {/* Trunk */}
+        <rect x="56" y="75" width="8" height="30" rx="2" fill="#7D5A44" />
+        
+        {/* Lush Canopy (Overlapping Circles) */}
+        <motion.g
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.8 }}
+        >
+          <circle cx="60" cy="55" r="28" fill={canopyColor} opacity="0.9" />
+          <circle cx="45" cy="50" r="22" fill={canopyColor} opacity="0.8" />
+          <circle cx="75" cy="50" r="22" fill={canopyColor} opacity="0.8" />
+          <circle cx="60" cy="38" r="20" fill={canopyColor} opacity="0.8" />
+          
+          {/* Fruits (Pink Dots) - only if healthy */}
+          {healthScore > 60 && (
+            <>
+              <circle cx="50" cy="45" r="3" fill={fruitColor} />
+              <circle cx="70" cy="42" r="3" fill={fruitColor} />
+              <circle cx="60" cy="32" r="3" fill={fruitColor} />
+              <circle cx="45" cy="58" r="3" fill={fruitColor} />
+              <circle cx="75" cy="55" r="3" fill={fruitColor} />
+            </>
+          )}
+        </motion.g>
+      </svg>
+    </div>
+  );
+};
+
+const AuditCard = ({ item, onDismiss }) => {
+  const [manualDate, setManualDate] = useState('');
+
+  return (
+    <motion.div 
+      initial={{ y: 300 }}
+      animate={{ y: 0 }}
+      exit={{ y: 600 }}
+      className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[3rem] p-8 shadow-2xl z-[60]"
+    >
+      <div className="w-12 h-1.5 bg-stone-100 rounded-full mx-auto mb-6" />
+      
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">{item.name}</h2>
+          <span className={`audit-tag ${item.score > 70 ? 'tag-clean' : 'tag-processed'}`}>
+            NOVA Scale: {item.nova}
+          </span>
+        </div>
+        <button onClick={onDismiss} className="p-2 bg-stone-50 rounded-full"><X className="w-5 h-5 text-stone-400" /></button>
+      </div>
+
+      <div className="space-y-4 mb-6">
+        <div className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${item.oils === 'Healthy' ? 'bg-sage/10 text-sage' : 'bg-terracotta/10 text-terracotta'}`}>
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-tighter">Oil Audit</p>
+              <p className="font-semibold text-sm">{item.oils} Fats Found</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Manual Date Entry */}
+        <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
+           <p className="text-[10px] font-bold text-stone-400 uppercase mb-2">Expiry Date (Optional)</p>
+           <div className="flex items-center gap-2">
+             <Timer className="w-4 h-4 text-stone-400" />
+             <input 
+               type="date" 
+               value={manualDate}
+               onChange={(e) => setManualDate(e.target.value)}
+               className="bg-transparent text-sm font-bold text-stone-800 outline-none w-full"
+               placeholder="Set expiry date"
+             />
+           </div>
+        </div>
+      </div>
+
+      <div className="bg-sage/5 border border-sage/10 rounded-3xl p-5 mb-8">
+        <p className="text-xs font-bold text-sage uppercase mb-3 tracking-widest">Swap Recommendation</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-bold text-stone-800 text-sm">Primal Kitchen Mayo</p>
+            <p className="text-[10px] text-stone-400">Avocado Oil Based • No Seed Oils</p>
+          </div>
+          <button className="text-sage font-bold text-xs flex items-center gap-1">
+            Shop <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <button onClick={onDismiss} className="wooden-btn w-full py-4">Add to Pantry</button>
+    </motion.div>
+  );
+};
+
+// --- Screens ---
+
+const FilteredListView = ({ title, filter, items, onBack }) => {
+  const filteredItems = items.filter(item => {
+    if (filter === 'clean') return item.score >= 70;
+    if (filter === 'junky') return item.score < 40;
+    if (filter === 'expiring') return item.expiry && (item.expiry.includes('day') || item.expiry.includes('Week'));
+    if (filter === 'week') return item.expiry && item.expiry.includes('day');
+    if (filter === 'month') return item.expiry && (item.expiry.includes('day') || item.expiry.includes('month'));
+    if (filter === 'year') return true; // Show all for year
+    return true;
+  });
+
+  return (
+    <motion.div 
+      initial={{ x: 400 }} 
+      animate={{ x: 0 }} 
+      exit={{ x: 400 }}
+      className="absolute inset-0 bg-cream z-[80] px-6 py-8"
+    >
+      <div className="flex items-center gap-4 mb-8">
+        <button onClick={onBack} className="p-2 bg-white rounded-full shadow-sm transition-transform active:scale-90"><ChevronRight className="w-5 h-5 rotate-180" /></button>
+        <h2 className="text-2xl font-bold">{title}</h2>
+      </div>
+      
+      <div className="space-y-4 overflow-y-auto h-[calc(100%-100px)] custom-scrollbar">
+        {filteredItems.length > 0 ? filteredItems.map((item, idx) => (
+          <div key={idx} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex items-center gap-4">
+            <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center text-2xl">
+              {item.icon || '📦'}
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-stone-800 text-sm">{item.name}</p>
+              <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">{item.brand}</p>
+              <div className="flex justify-between items-center mt-2">
+                <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${item.score > 70 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  Score: {item.score}
+                </span>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold text-terracotta">{item.expiry || 'Safe'}</p>
+                  <p className="text-[8px] text-stone-300 font-bold uppercase">{item.expiryDate}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )) : (
+          <div className="flex flex-col items-center justify-center h-full text-stone-300">
+             <CheckCircle2 className="w-12 h-12 mb-4" />
+             <p className="font-bold">All clear!</p>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+const Dashboard = ({ healthScore, onSelectCategory, onShowMarket }) => {
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState('Just now');
+
+  const handleSync = () => {
+    setIsSyncing(true);
+    setTimeout(() => {
+      setIsSyncing(false);
+      setLastSync('12:46 PM');
+    }, 2000);
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      className="pb-24"
+    >
+      <div className="px-6 py-8 border-b border-stone-100 bg-white/50 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-stone-800 leading-none">Pantry Bloom</h1>
+          <p className="text-stone-400 text-sm mt-2">Your clean kitchen companion</p>
+        </div>
+        <button 
+          onClick={handleSync}
+          className="flex flex-col items-center gap-1 group"
+        >
+          <div className={`p-2 rounded-xl transition-all ${isSyncing ? 'bg-sage text-white animate-spin' : 'bg-stone-50 text-stone-300 group-hover:text-sage'}`}>
+            <Cloud className="w-4 h-4" />
+          </div>
+          <span className="text-[8px] font-bold text-stone-300 uppercase tracking-tighter">
+            {isSyncing ? 'Syncing...' : `Saved ${lastSync}`}
+          </span>
+        </button>
+      </div>
+
+      <div className="flex flex-col items-center py-10 bg-cream">
+        <LivelyTree healthScore={healthScore} />
+        <div className="text-center mt-6">
+          <h3 className="text-6xl font-bold text-[#1a3a1a] tracking-tighter">{healthScore}</h3>
+          <p className="text-sm text-stone-500 mt-2 font-medium">Pantry Health Score</p>
+          <div className="mt-4 px-6 py-2 bg-[#E8EDE0] text-[#5D6D3F] rounded-full font-bold text-sm inline-block shadow-sm">
+            Excellent
+          </div>
+        </div>
+      </div>
+
+    <div className="px-6 grid grid-cols-3 gap-3 mt-6">
+      <button onClick={() => onSelectCategory('clean', 'Clean Food')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div className="w-12 h-12 mb-2">
+           <ResponsiveContainer width="100%" height="100%">
+             <PieChart>
+               <Pie data={[{value: 84}, {value: 16}]} innerRadius={15} outerRadius={22} dataKey="value">
+                 <Cell fill="#5D6D3F" /><Cell fill="#D27D56" />
+               </Pie>
+             </PieChart>
+           </ResponsiveContainer>
+        </div>
+        <p className="text-lg font-bold text-stone-800">84%</p>
+        <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Clean Food</p>
+      </button>
+      
+      <button onClick={() => onSelectCategory('junky', 'Junky Food')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div className="w-12 h-12 mb-2 flex items-center justify-center bg-red-50 rounded-full">
+           <AlertCircle className="w-6 h-6 text-terracotta" />
+        </div>
+        <p className="text-lg font-bold text-stone-800">16%</p>
+        <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1 text-terracotta">Junky</p>
+      </button>
+
+      <button onClick={() => onSelectCategory('expiring', 'Expiring Soon')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <Timer className="w-8 h-8 text-terracotta mb-4" />
+        <p className="text-lg font-bold text-stone-800">3</p>
+        <p className="text-[8px] text-stone-400 uppercase font-bold tracking-widest mt-1">Expiring</p>
+      </button>
+    </div>
+
+    <div className="px-6 mt-10 p-6 rounded-[2rem] bg-wood/10 border border-wood/10 relative overflow-hidden">
+      <ShoppingBag className="absolute -right-4 -bottom-4 w-24 h-24 text-wood/5 rotate-12" />
+      <h4 className="text-wood-dark mb-1">Local Farmers Market</h4>
+      <p className="text-xs text-wood/60 mb-2 leading-relaxed">Wyndham Vale: Fresh organic avocados available this Saturday in Werribee.</p>
+      <button 
+        onClick={onShowMarket}
+        className="text-xs font-bold text-wood-dark underline"
+      >
+        View Market Map
+      </button>
+    </div>
+  </motion.div>
+  );
+};
+
+const HistoryScreen = () => (
+  <motion.div 
+    initial={{ opacity: 0 }} 
+    animate={{ opacity: 1 }} 
+    className="px-6 py-8 pb-24"
+  >
+    <div className="flex justify-between items-center mb-8">
+      <h1 className="text-3xl">Bloom History</h1>
+      <button className="text-xs text-sage font-bold flex items-center gap-1">SMS Alerts On <CheckCircle2 className="w-3 h-3" /></button>
+    </div>
+
+    <div className="space-y-4">
+      {[
+        { name: 'Organic Black Beans', brand: 'Eden Foods', score: 95, status: 'Excellent', icon: '🥫', color: 'bg-green-50 text-green-700' },
+        { name: 'Chocolate Chip Cookies', brand: 'Chips Ahoy', score: 32, status: 'Poor', icon: '🍪', color: 'bg-red-50 text-red-700' },
+        { name: 'Almond Butter', brand: 'Barney Butter', score: 92, status: 'Excellent', icon: '🥜', color: 'bg-green-50 text-green-700' },
+        { name: 'Pasta Sauce', brand: 'Prego Traditional', score: 58, status: 'Fair', icon: '🍝', color: 'bg-yellow-50 text-yellow-700' },
+      ].map((item, idx) => (
+        <div key={idx} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex items-center gap-4 group">
+          <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
+            {item.icon}
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-stone-800 text-sm">{item.name}</p>
+            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter mt-0.5">{item.brand}</p>
+            <div className="flex gap-2 mt-2">
+              <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${item.color}`}>
+                {item.score} • {item.status}
+              </span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </motion.div>
+);
+
+const Stats = ({ onSelectCategory }) => (
+  <motion.div 
+    initial={{ opacity: 0 }} 
+    animate={{ opacity: 1 }} 
+    className="px-6 py-8 pb-24"
+  >
+    <h1 className="text-3xl mb-8">Pantry Health Stats</h1>
+    
+    <div className="cozy-card mb-8 p-8 flex flex-col items-center">
+      <h4 className="text-sm font-bold text-stone-400 uppercase tracking-widest mb-6 text-center">Health Distribution</h4>
+      <div className="w-full h-48">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={[
+                { name: 'Good', value: 65, color: '#5D6D3F' },
+                { name: 'Fair', value: 20, color: '#A67B5B' },
+                { name: 'Poor', value: 15, color: '#D27D56' }
+              ]}
+              innerRadius={60}
+              outerRadius={80}
+              paddingAngle={8}
+              dataKey="value"
+            >
+              <Cell fill="#5D6D3F" />
+              <Cell fill="#A67B5B" />
+              <Cell fill="#D27D56" />
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex gap-6 mt-4">
+        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-sage" /><span className="text-[10px] font-bold">Good</span></div>
+        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-wood" /><span className="text-[10px] font-bold">Fair</span></div>
+        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-terracotta" /><span className="text-[10px] font-bold">Poor</span></div>
+      </div>
+    </div>
+
+    <h3 className="text-lg mb-4">Expiry Forecast</h3>
+    <div className="space-y-4">
+      {[
+        { id: 'week', label: 'This Week', count: 3, color: 'bg-terracotta', percentage: 10 },
+        { id: 'month', label: 'This Month', count: 14, color: 'bg-wood', percentage: 45 },
+        { id: 'year', label: 'Yearly Stock', count: 22, color: 'bg-sage', percentage: 35 },
+      ].map((period) => (
+        <button 
+          key={period.label} 
+          onClick={() => onSelectCategory(period.id, period.label)}
+          className="w-full bg-white p-5 rounded-[2rem] border border-stone-100 text-left active:scale-95 transition-all"
+        >
+          <div className="flex justify-between items-center mb-3">
+            <span className="font-bold text-sm">{period.label}</span>
+            <span className="text-xs font-bold text-stone-400">{period.count} items</span>
+          </div>
+          <div className="w-full h-2 bg-stone-50 rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${period.percentage}%` }}
+              className={`h-full ${period.color}`} 
+            />
+          </div>
+        </button>
+      ))}
+    </div>
+  </motion.div>
+);
+
+const Scanner = ({ onScan }) => (
+  <div className="relative w-full h-full bg-black">
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="w-64 h-64 border-2 border-white/50 rounded-[3rem] relative">
+        <motion.div 
+          animate={{ y: [0, 256, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="w-full h-0.5 bg-sage shadow-[0_0_15px_#5D6D3F] absolute" 
+        />
+      </div>
+    </div>
+    <div className="absolute top-10 left-6 right-6 flex justify-between items-center text-white">
+      <h3 className="text-xl font-bold">Auditor Scan</h3>
+      <button className="p-2 bg-white/10 rounded-full backdrop-blur-md"><Settings className="w-5 h-5" /></button>
+    </div>
+    <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center gap-6">
+      <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Center barcode to audit</p>
+      <button 
+        onClick={() => onScan({ name: 'Hellmann\'s Mayo', nova: 4, oils: 'Inflammatory', sugar: 'Hidden', score: 32 })}
+        className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-8 border-white/20 active:scale-95 transition-all shadow-2xl"
+      >
+        <div className="w-12 h-12 bg-stone-800 rounded-full" />
+      </button>
+      <button className="text-white/40 text-[10px] font-bold uppercase tracking-widest underline decoration-white/20">Can't scan? Enter manually</button>
+    </div>
+  </div>
+);
+
+const MarketMapScreen = ({ onBack }) => {
+  const markets = [
+    { name: 'Wyndham Vale Farmers Market', location: 'Werribee Park', day: 'Saturdays', time: '8:00 AM - 1:00 PM', distance: '1.2 km' },
+    { name: 'Point Cook Seasonal Market', location: 'Murnong St', day: 'Sundays', time: '9:00 AM - 2:00 PM', distance: '4.5 km' },
+    { name: 'Hoppers Crossing Fresh', location: 'Old Geelong Rd', day: 'Daily', time: '7:00 AM - 6:00 PM', distance: '3.1 km' },
+  ];
+
+  return (
+    <motion.div 
+      initial={{ y: 800 }} 
+      animate={{ y: 0 }} 
+      exit={{ y: 800 }}
+      className="absolute inset-0 bg-cream z-[90] flex flex-col"
+    >
+      <div className="p-8 flex items-center gap-4">
+        <button onClick={onBack} className="p-2 bg-white rounded-full shadow-sm"><ChevronRight className="w-5 h-5 rotate-180" /></button>
+        <h2 className="text-3xl">Market Finder</h2>
+      </div>
+
+      <div className="flex-1 px-6 space-y-6 overflow-y-auto pb-32">
+        <div className="w-full h-48 bg-stone-200 rounded-[3rem] relative overflow-hidden shadow-inner border-4 border-white">
+           <div className="absolute inset-0 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=Werribee,VIC&zoom=13&size=400x200&sensor=false')] bg-cover opacity-50 grayscale" />
+           <motion.div 
+             animate={{ scale: [1, 1.2, 1] }} 
+             transition={{ duration: 2, repeat: Infinity }}
+             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-sage rounded-full border-2 border-white shadow-lg" 
+           />
+        </div>
+
+        {markets.map((market, idx) => (
+          <div key={idx} className="bg-white p-5 rounded-[2rem] border border-stone-100 shadow-sm flex justify-between items-center group">
+            <div>
+              <p className="font-bold text-stone-800">{market.name}</p>
+              <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter mb-2">{market.location}</p>
+              <div className="flex gap-2">
+                <span className="px-2 py-0.5 bg-sage/10 text-sage text-[8px] font-bold rounded-full">{market.day}</span>
+                <span className="px-2 py-0.5 bg-stone-50 text-stone-400 text-[8px] font-bold rounded-full">{market.time}</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-stone-800">{market.distance}</p>
+              <button className="text-[10px] font-bold text-sage underline mt-1">Get Directions</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+const Pantry = ({ items }) => {
+  const goodItems = items.filter(i => i.score >= 50);
+  const badItems = items.filter(i => i.score < 50);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      className="px-4 py-8 pb-32"
+    >
+      <div className="flex justify-between items-center mb-12 px-2">
+        <h1 className="text-4xl text-stone-800">My Pantry</h1>
+        <button className="p-3 bg-sage text-white rounded-2xl shadow-lg"><Plus className="w-5 h-5" /></button>
+      </div>
+
+      {/* Top Shelf: Good Food */}
+      <div className="wooden-shelf">
+        <div className="shelf-label">The Good Stuff</div>
+        <div className="grid grid-cols-2 gap-4">
+          {goodItems.map((item, idx) => (
+            <motion.div 
+              key={idx} 
+              whileHover={{ y: -5 }}
+              className="bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center"
+            >
+              <span className="text-3xl mb-2">{item.icon}</span>
+              <p className="text-[10px] font-bold text-stone-800 truncate w-full">{item.name}</p>
+              <p className="text-[8px] text-stone-400 font-bold uppercase">{item.expiryDate}</p>
+              <div className="mt-2 w-full h-1 bg-stone-50 rounded-full overflow-hidden">
+                <div className="h-full bg-sage" style={{ width: `${item.score}%` }} />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom Shelf: Junky Food */}
+      <div className="wooden-shelf mt-20">
+        <div className="shelf-label bg-terracotta">The Vices</div>
+        <div className="grid grid-cols-2 gap-4 opacity-80">
+          {badItems.map((item, idx) => (
+            <motion.div 
+              key={idx} 
+              whileHover={{ y: -5 }}
+              className="bg-white/60 p-3 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center"
+            >
+              <span className="text-3xl mb-2 grayscale">{item.icon}</span>
+              <p className="text-[10px] font-bold text-stone-800 truncate w-full">{item.name}</p>
+              <p className="text-[8px] text-terracotta font-bold uppercase">{item.expiryDate}</p>
+              <div className="mt-2 w-full h-1 bg-stone-50 rounded-full overflow-hidden">
+                <div className="h-full bg-terracotta" style={{ width: `${item.score}%` }} />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// --- App ---
+
+const App = () => {
+  const [currentScreen, setCurrentScreen] = useState('dashboard');
+  const [scannedItem, setScannedItem] = useState(null);
+  const [healthScore, setHealthScore] = useState(74);
+  const [activeCategory, setActiveCategory] = useState(null); // { id, title }
+  const [showMarket, setShowMarket] = useState(false);
+
+  const pantryItems = [
+    { name: 'Organic Black Beans', brand: 'Eden Foods', score: 95, status: 'Excellent', icon: '🥫', expiryDate: 'Oct 12, 2026' },
+    { name: 'Chocolate Chip Cookies', brand: 'Chips Ahoy', score: 32, status: 'Poor', icon: '🍪', expiry: '2 days', expiryDate: 'May 14, 2026' },
+    { name: 'Almond Butter', brand: 'Barney Butter', score: 92, status: 'Excellent', icon: '🥜', expiryDate: 'Jun 22, 2026' },
+    { name: 'Pasta Sauce', brand: 'Prego Traditional', score: 58, status: 'Fair', icon: '🍝', expiryDate: 'May 28, 2026' },
+    { name: 'Avocado Oil', brand: 'Chosen Foods', score: 98, status: 'Excellent', icon: '🥑', expiryDate: 'Dec 05, 2026' },
+    { name: 'Greek Yogurt', brand: 'Chobani', score: 45, status: 'Fair', icon: '🥛', expiry: '4 days', expiryDate: 'May 16, 2026' },
+    { name: 'Potato Chips', brand: 'Lays', score: 22, status: 'Poor', icon: '🍟', expiryDate: 'Aug 10, 2026' },
+    { name: 'Soft Drink', brand: 'Coke', score: 15, status: 'Poor', icon: '🥤', expiryDate: 'Nov 30, 2026' },
+  ];
+
+  const handleScan = (item) => {
+    setScannedItem(item);
+  };
+
+  return (
+    <div className="min-h-screen bg-zinc-200 sm:flex sm:items-center sm:justify-center sm:p-4">
+      <div className="phone-container">
+        
+        {/* Screen Content */}
+        <div className="w-full h-full pb-24 overflow-y-auto custom-scrollbar relative">
+          <AnimatePresence mode="wait">
+            {currentScreen === 'dashboard' && (
+              <Dashboard 
+                healthScore={healthScore} 
+                onSelectCategory={(id, title) => setActiveCategory({ id, title })}
+                onShowMarket={() => setShowMarket(true)}
+                key="dashboard" 
+              />
+            )}
+            {currentScreen === 'history' && <HistoryScreen key="history" />}
+            {currentScreen === 'stats' && <Stats onSelectCategory={(id, title) => setActiveCategory({ id, title })} key="stats" />}
+            {currentScreen === 'scanner' && <Scanner onScan={handleScan} key="scanner" />}
+            {currentScreen === 'pantry' && <Pantry items={pantryItems} key="pantry" />}
+          </AnimatePresence>
+
+          {/* Category Drill-down */}
+          <AnimatePresence>
+            {activeCategory && (
+              <FilteredListView 
+                title={activeCategory.title}
+                filter={activeCategory.id}
+                items={pantryItems}
+                onBack={() => setActiveCategory(null)}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Market Finder Overlay */}
+          <AnimatePresence>
+            {showMarket && (
+              <MarketMapScreen onBack={() => setShowMarket(false)} />
+            )}
+          </AnimatePresence>
+
+          {/* Audit Overlay */}
+          <AnimatePresence>
+            {scannedItem && (
+              <AuditCard 
+                item={scannedItem} 
+                onDismiss={() => {
+                  setScannedItem(null);
+                  setCurrentScreen('dashboard');
+                }} 
+              />
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Tab Bar */}
+        <nav className="absolute bottom-0 left-0 right-0 h-24 bg-white border-t border-stone-100 flex items-center justify-around z-50">
+          {[
+            { id: 'dashboard', icon: '🏠', label: 'Home' },
+            { id: 'history', icon: '🕒', label: 'History' },
+            { id: 'stats', icon: '📊', label: 'Stats' },
+            { id: 'scanner', icon: '📷', label: 'Scan' },
+            { id: 'pantry', icon: '🧺', label: 'Pantry' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setCurrentScreen(tab.id)}
+              className="flex flex-col items-center gap-1 p-2 transition-all duration-300"
+            >
+              <div className={`text-2xl transition-transform duration-300 ${currentScreen === tab.id ? 'scale-125' : 'grayscale opacity-50'}`}>
+                {tab.icon}
+              </div>
+              <span className={`text-[10px] font-bold ${currentScreen === tab.id ? 'text-sage' : 'text-stone-300'}`}>
+                {tab.label}
+              </span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Status Bar (Simulated) */}
+        <div className="absolute top-0 left-0 right-0 h-10 flex justify-between items-center px-10 pointer-events-none z-[70]">
+           <span className="text-xs font-bold text-stone-800">9:41</span>
+           <div className="flex gap-1.5 items-center">
+             <div className="w-4 h-4 bg-sage/20 rounded-full flex items-center justify-center">
+               <div className="w-1.5 h-1.5 bg-sage rounded-full" />
+             </div>
+             <span className="text-[10px] font-bold text-stone-400">Syncing</span>
+           </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default App;
