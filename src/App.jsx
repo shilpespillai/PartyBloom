@@ -301,11 +301,41 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete, onShowMarket }) => {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 10 }}
-            className="p-5 bg-cream/30 rounded-3xl border border-stone-100 mb-8"
+            className="space-y-1 mb-8"
           >
-            <p className="text-xs leading-relaxed text-stone-600 italic font-serif">
-              "{item.ingredients || 'Ingredients list being processed...'}"
-            </p>
+            <div className="px-2 mb-4">
+              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Ingredient Breakdown</p>
+            </div>
+
+            {(() => {
+              const list = (item.ingredients || 'Unknown').split(',').map(s => s.trim()).filter(s => s.length > 1);
+              const redFlags = ['sugar', 'syrup', 'palm', 'soybean', 'canola', 'vegetable', 'sunflower', 'msg', 'glutamate', 'color', 'dye', 'artificial', 'carrageenan'];
+              
+              return list.map((ing, idx) => {
+                const isBad = redFlags.some(flag => ing.toLowerCase().includes(flag));
+                return (
+                  <div key={idx} className="flex items-center gap-4 p-4 border-b border-stone-50 group">
+                    <div className={`p-2 rounded-xl transition-colors ${isBad ? 'bg-terracotta/10 text-terracotta' : 'bg-sage/10 text-sage'}`}>
+                      {isBad ? <AlertCircle className="w-4 h-4" /> : <Leaf className="w-4 h-4" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-bold ${isBad ? 'text-stone-800' : 'text-stone-700'}`}>{ing}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-stone-300">
+                        {isBad ? 'Watch Out' : 'Clean Component'}
+                      </p>
+                    </div>
+                    <div className={`w-2 h-2 rounded-full ${isBad ? 'bg-terracotta' : 'bg-sage'}`} />
+                  </div>
+                );
+              });
+            })()}
+
+            {(!item.ingredients || item.ingredients === 'Unknown') && (
+              <div className="p-8 text-center bg-stone-50 rounded-3xl border border-dashed border-stone-200">
+                <Info className="w-8 h-8 text-stone-300 mx-auto mb-3" />
+                <p className="text-xs text-stone-400 font-bold uppercase tracking-widest">Audit in progress...</p>
+              </div>
+            )}
           </motion.div>
         )}
 
