@@ -527,7 +527,7 @@ const FilteredListView = ({ title, filter, items, onBack }) => {
                   Score: {item.score}
                 </span>
                 <div className="text-right">
-                  <p className="text-[10px] font-bold text-terracotta">{item.expiry || 'Safe'}</p>
+                  <p className="text-[10px] font-bold text-stone-400">{item.expiry || 'In Date'}</p>
                   <p className="text-[8px] text-stone-300 font-bold uppercase">{item.expiryDate}</p>
                 </div>
               </div>
@@ -1286,7 +1286,7 @@ const PantryCard = ({ item, onClick }) => {
          <span className={`text-[9px] font-bold ${item.score > 70 ? 'text-sage' : 'text-stone-500'}`}>Score: {item.score}</span>
          <div className="w-1 h-1 rounded-full bg-stone-200" />
          <span className={`text-[8px] font-bold ${isExpiring ? 'text-red-500' : 'text-stone-300'}`}>
-           {isExpiring ? 'Expiring' : 'Safe'}
+           {isExpiring ? 'Expiring' : 'In Date'}
          </span>
       </div>
     </motion.div>
