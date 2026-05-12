@@ -233,11 +233,18 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete, onShowMarket }) => {
 
   return (
     <motion.div 
-      initial={{ y: 300 }}
-      animate={{ y: 0 }}
-      exit={{ y: 600 }}
-      className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[3rem] p-8 shadow-2xl z-[60] max-h-[90vh] overflow-y-auto custom-scrollbar"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[200] flex flex-col justify-end"
     >
+      <motion.div 
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        className="bg-[#FDFCF7] rounded-t-[3rem] p-8 shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar"
+      >
       <div className="w-12 h-1.5 bg-stone-100 rounded-full mx-auto mb-6" />
       
       <div className="flex gap-4 items-start mb-6">
@@ -508,7 +515,7 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete, onShowMarket }) => {
             <Trash2 className="w-6 h-6" />
           </button>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };
