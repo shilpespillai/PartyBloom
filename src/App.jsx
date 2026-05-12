@@ -236,14 +236,14 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete, onShowMarket }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[200] flex flex-col justify-end px-4 pb-10"
+      className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[200] flex flex-col justify-end px-6 pb-20"
     >
       <motion.div 
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="bg-[#FDFCF7] rounded-[3rem] p-8 shadow-2xl max-h-[85vh] w-full max-w-lg mx-auto overflow-y-auto custom-scrollbar relative"
+        className="bg-[#FDFCF7] rounded-[3rem] p-8 pb-12 shadow-2xl max-h-[82vh] w-full max-w-md mx-auto overflow-y-auto custom-scrollbar relative"
       >
       <div className="w-12 h-1.5 bg-stone-100 rounded-full mx-auto mb-6" />
       
