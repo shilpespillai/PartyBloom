@@ -726,10 +726,6 @@ const Stats = ({ stats, onSelectCategory }) => {
           </button>
         );
       })}
-      <div className="flex justify-center mt-6 pb-6">
-        <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest">
-          Pantry Bloom Boutique • v1.0.67
-        </p>
       </div>
     </motion.div>
   );
@@ -745,7 +741,8 @@ const Scanner = ({ onScan }) => {
   useEffect(() => {
     let stream = null;
     let isScanning = true;
-    let fInt = null;
+    let focusInt = null;
+    let mockInt = null;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { alpha: false });
 
@@ -800,7 +797,7 @@ const Scanner = ({ onScan }) => {
               }
             } catch (e) { /* ignore */ }
           };
-          fInt = setInterval(forceFocus, 2000);
+          focusInt = setInterval(forceFocus, 2000);
           forceFocus();
         }
 
@@ -842,7 +839,7 @@ const Scanner = ({ onScan }) => {
       }
     }
     // Mock recognition loop
-    fInt = setInterval(() => {
+    mockInt = setInterval(() => {
       if (!isScanning) return;
       setIsDetected(prev => !prev);
     }, 800);
@@ -850,7 +847,8 @@ const Scanner = ({ onScan }) => {
     startCamera();
     return () => {
       isScanning = false;
-      if (fInt) clearInterval(fInt);
+      if (focusInt) clearInterval(focusInt);
+      if (mockInt) clearInterval(mockInt);
       if (stream) {
         stream.getTracks().forEach(t => t.stop());
       }
