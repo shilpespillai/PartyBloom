@@ -1019,6 +1019,14 @@ const App = () => {
   const [activeCategory, setActiveCategory] = useState(null);
   const [showMarket, setShowMarket] = useState(false);
   const [user, setUser] = useState(null);
+  const mainScrollRef = React.useRef(null);
+
+  // --- Scroll to Top on Screen Change or Category Drill-down ---
+  useEffect(() => {
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTo(0, 0);
+    }
+  }, [currentScreen, activeCategory]);
 
   // 1. Initialize from LocalStorage or default
   const [pantryItems, setPantryItems] = useState(() => {
@@ -1307,7 +1315,7 @@ const App = () => {
       <div className="phone-container">
         
         {/* Screen Content */}
-        <div className="w-full h-full pb-24 overflow-y-auto custom-scrollbar relative">
+        <div ref={mainScrollRef} className="w-full h-full pb-24 overflow-y-auto custom-scrollbar relative">
           <AnimatePresence mode="wait">
             {currentScreen === 'dashboard' && (
               <Dashboard 
