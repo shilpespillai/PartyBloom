@@ -236,16 +236,33 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete }) => {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 10 }}
-            className="grid grid-cols-3 gap-3 mb-8"
+            className="space-y-1 mb-8"
           >
+            <div className="flex justify-between items-center px-2 mb-4">
+              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Nutritional Audit</p>
+              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Per 100g</p>
+            </div>
+            
             {[
-              { l: 'Calories', v: item.nutrition?.cal || '0', c: 'stone' },
-              { l: 'Fats', v: item.nutrition?.fat || '0g', c: 'stone' },
-              { l: 'Sugars', v: item.nutrition?.sugar || '0g', c: 'terracotta' }
-            ].map(n => (
-              <div key={n.l} className="p-4 bg-stone-50 rounded-2xl text-center border border-stone-100">
-                <p className={`text-[8px] font-bold uppercase tracking-widest mb-1 ${n.c === 'terracotta' ? 'text-terracotta' : 'text-stone-300'}`}>{n.l}</p>
-                <p className="text-sm font-black text-stone-800">{n.v}</p>
+              { label: 'Additives', value: `${item.additives || 0}`, icon: <Settings className="w-4 h-4" />, status: item.additives > 5 ? 'bad' : 'good', sub: item.additives > 5 ? 'Contains risky additives' : 'Low risk' },
+              { label: 'Fiber', value: `${item.nutrition?.fiber || 0}g`, icon: <Leaf className="w-4 h-4" />, status: item.nutrition?.fiber > 3 ? 'good' : 'neutral', sub: item.nutrition?.fiber > 3 ? 'High fiber' : 'Some fiber' },
+              { label: 'Energy', value: `${item.nutrition?.energy || 0} kcal`, icon: <Timer className="w-4 h-4" />, status: item.nutrition?.energy < 200 ? 'good' : 'bad', sub: item.nutrition?.energy < 200 ? 'Low energy' : 'High energy' },
+              { label: 'Saturated fat', value: `${item.nutrition?.saturatedFat || 0}g`, icon: <AlertCircle className="w-4 h-4" />, status: item.nutrition?.saturatedFat < 1 ? 'good' : 'bad', sub: item.nutrition?.saturatedFat < 1 ? 'No saturated fat' : 'High fat' },
+              { label: 'Sugar', value: `${item.nutrition?.sugar || 0}g`, icon: <ShoppingBag className="w-4 h-4" />, status: item.nutrition?.sugar < 5 ? 'good' : 'bad', sub: item.nutrition?.sugar < 5 ? 'Low sugar' : 'High sugar' },
+              { label: 'Sodium', value: `${item.nutrition?.sodium || 0}mg`, icon: <Info className="w-4 h-4" />, status: item.nutrition?.sodium < 400 ? 'good' : 'bad', sub: item.nutrition?.sodium < 400 ? 'Low impact' : 'High sodium' },
+            ].map((row, idx) => (
+              <div key={idx} className="flex items-center gap-4 p-4 border-b border-stone-50 group">
+                <div className="p-2 bg-stone-50 rounded-xl text-stone-400 group-hover:bg-sage/10 group-hover:text-sage transition-colors">
+                  {row.icon}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-stone-800">{row.label}</p>
+                  <p className="text-[10px] text-stone-400 font-medium">{row.sub}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-stone-600">{row.value}</span>
+                  <div className={`w-2.5 h-2.5 rounded-full ${row.status === 'good' ? 'bg-sage shadow-[0_0_8px_rgba(93,109,63,0.4)]' : row.status === 'bad' ? 'bg-terracotta shadow-[0_0_8px_rgba(210,125,86,0.4)]' : 'bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.4)]'}`} />
+                </div>
               </div>
             ))}
           </motion.div>
@@ -417,10 +434,10 @@ const Dashboard = ({ stats, onSelectCategory, onShowMarket }) => {
           <h3 className="text-6xl font-bold text-[#1a3a1a] tracking-tighter">{healthScore}</h3>
           <p className="text-sm text-stone-500 mt-2 font-medium">Pantry Health Score</p>
           <div className="mt-4 px-6 py-2 bg-[#E8EDE0] text-[#5D6D3F] rounded-full font-bold text-sm inline-block shadow-sm">
-            Excellent
-          </div>
         </div>
-      </d    <div className="px-6 grid grid-cols-3 gap-3 mt-6">
+      </div>
+
+      <div className="px-6 grid grid-cols-3 gap-3 mt-6">
       <button onClick={() => onSelectCategory('clean', 'Clean Food')} className="bg-white p-4 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
         <div className="w-12 h-12 mb-2">
            <ResponsiveContainer width="100%" height="100%">
@@ -1076,25 +1093,49 @@ const App = () => {
       const data = await response.json();
 
       if (data.status === 1) {
+        // 1. Extract Raw Data
         const p = data.product;
-        // Smart Name Resolution: Check multiple fields to avoid "Unknown"
+        const n = p.nutriments || {};
+        
+        // 2. Yuka-Style Scoring Engine
+        let baseScore = p.nutriscore_score !== undefined ? (100 - (p.nutriscore_score * 2)) : 60;
+        
+        // Additive & Processing Penalties
+        const additivesCount = p.additives_n || 0;
+        const novaGroup = p.nova_group || 2;
+        
+        if (novaGroup >= 4) baseScore -= 25; // Massive penalty for ultra-processed
+        if (additivesCount > 3) baseScore -= 15;
+        if (additivesCount > 7) baseScore -= 20;
+        
+        // Organic Bonus
+        const isOrganic = p.labels_tags?.some(tag => tag.toLowerCase().includes('organic'));
+        if (isOrganic) baseScore += 10;
+        
+        // Clamp score 0-100
+        const finalScore = Math.max(0, Math.min(100, baseScore));
+
         const resolvedName = p.product_name || p.product_name_en || p.generic_name || p.brands || 'New Product';
         
         const realItem = {
           id: Date.now(),
           name: resolvedName,
           brand: p.brands || 'Artisan Brand',
-          score: p.nutriscore_score !== undefined ? (100 - (p.nutriscore_score * 2)) : 75,
-          nova: p.nova_group || 2,
+          score: finalScore,
+          nova: novaGroup,
+          additives: additivesCount,
           icon: '🥫',
           image: p.image_front_url || p.image_url || null,
           ingredients: p.ingredients_text || 'Ingredients list being processed...',
           oils: (p.ingredients_text?.toLowerCase().includes('oil')) ? 'Oils Found' : 'Clean',
-          sugar: p.nutriments?.sugars_serving ? `${p.nutriments.sugars_serving}g` : '0g',
+          sugar: n.sugars_serving ? `${n.sugars_serving}g` : '0g',
           nutrition: {
-            cal: Math.round(p.nutriments?.['energy-kcal_serving'] || p.nutriments?.['energy-kcal'] || 0),
-            fat: p.nutriments?.fat_serving || p.nutriments?.fat || 0,
-            sugar: p.nutriments?.sugars_serving || p.nutriments?.sugars || 0
+            energy: Math.round(n['energy-kcal_100g'] || 0),
+            fat: n.fat_100g || 0,
+            saturatedFat: n['saturated-fat_100g'] || 0,
+            sugar: n.sugars_100g || 0,
+            sodium: Math.round((n.salt_100g || 0) * 400), // mg sodium
+            fiber: n.fiber_100g || 0
           },
           expiryDate: new Date(Date.now() + 1000*60*60*24*30).toLocaleDateString()
         };
