@@ -744,9 +744,8 @@ const Stats = ({ stats, onSelectCategory }) => {
       {[
         { id: 'week', label: 'This Week', count: stats.weekCount, color: 'bg-terracotta' },
         { id: 'month', label: 'This Month', count: stats.monthCount, color: 'bg-wood' },
-        { id: 'year', label: 'Yearly Stock', count: stats.yearCount, color: 'bg-sage' },
       ].map((period) => {
-        const total = (stats.weekCount + stats.monthCount + stats.yearCount) || 1;
+        const total = (stats.weekCount + stats.monthCount) || 1;
         const percentage = Math.round((period.count / total) * 100);
         return (
           <button 
@@ -1371,7 +1370,6 @@ const App = () => {
       expiringCount: expiringWeek.length,
       weekCount: expiringWeek.length,
       monthCount: expiringMonth.length,
-      yearCount: longTerm.length,
       distData: [
         { name: 'Good', value: clean.length, color: '#5D6D3F' },
         { name: 'Fair', value: fair.length, color: '#A67B5B' },
