@@ -243,7 +243,7 @@ const AuditCard = ({ item, onDismiss, onAdd, onDelete, onShowMarket }) => {
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="bg-[#FDFCF7] rounded-t-[3rem] p-8 shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar"
+        className="bg-[#FDFCF7] rounded-t-[3rem] p-8 pb-24 shadow-2xl max-h-[88vh] w-full max-w-lg mx-auto overflow-y-auto custom-scrollbar relative"
       >
       <div className="w-12 h-1.5 bg-stone-100 rounded-full mx-auto mb-6" />
       
