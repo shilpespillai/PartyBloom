@@ -65,7 +65,7 @@ const LivelyTree = ({ healthScore }) => {
   );
 };
 
-const AuditCard = ({ item, onDismiss }) => {
+const AuditCard = ({ item, onDismiss, onAdd }) => {
   const [manualDate, setManualDate] = useState('');
   const [viewDetails, setViewDetails] = useState(false);
 
@@ -178,7 +178,12 @@ const AuditCard = ({ item, onDismiss }) => {
             className="bg-transparent text-sm font-bold text-stone-800 outline-none w-full"
           />
         </div>
-        <button onClick={onDismiss} className="wooden-btn w-full py-4 shadow-xl">Add to Pantry</button>
+        <button 
+          onClick={() => onAdd({ ...item, expiryDate: manualDate || item.expiryDate })} 
+          className="wooden-btn w-full py-4 shadow-xl"
+        >
+          Add to Pantry
+        </button>
       </div>
     </motion.div>
   );
@@ -693,19 +698,62 @@ const App = () => {
   const [activeCategory, setActiveCategory] = useState(null); // { id, title }
   const [showMarket, setShowMarket] = useState(false);
 
-  const pantryItems = [
-    { name: 'Organic Black Beans', brand: 'Eden Foods', score: 95, status: 'Excellent', icon: '🥫', expiryDate: 'Oct 12, 2026' },
-    { name: 'Chocolate Chip Cookies', brand: 'Chips Ahoy', score: 32, status: 'Poor', icon: '🍪', expiry: '2 days', expiryDate: 'May 14, 2026' },
-    { name: 'Almond Butter', brand: 'Barney Butter', score: 92, status: 'Excellent', icon: '🥜', expiryDate: 'Jun 22, 2026' },
-    { name: 'Pasta Sauce', brand: 'Prego Traditional', score: 58, status: 'Fair', icon: '🍝', expiryDate: 'May 28, 2026' },
-    { name: 'Avocado Oil', brand: 'Chosen Foods', score: 98, status: 'Excellent', icon: '🥑', expiryDate: 'Dec 05, 2026' },
-    { name: 'Greek Yogurt', brand: 'Chobani', score: 45, status: 'Fair', icon: '🥛', expiry: '4 days', expiryDate: 'May 16, 2026' },
-    { name: 'Potato Chips', brand: 'Lays', score: 22, status: 'Poor', icon: '🍟', expiryDate: 'Aug 10, 2026' },
-    { name: 'Soft Drink', brand: 'Coke', score: 15, status: 'Poor', icon: '🥤', expiryDate: 'Nov 30, 2026' },
-  ];
+  const [pantryItems, setPantryItems] = useState([
+    { 
+      name: 'Organic Black Beans', 
+      brand: 'Eden Foods', 
+      score: 95, 
+      status: 'Excellent', 
+      icon: '🥫', 
+      expiryDate: 'Oct 12, 2026',
+      ingredients: 'Organic Black Beans, Water, Sea Salt.',
+      oils: 'None',
+      sugar: '0g',
+      additives: []
+    },
+    { 
+      name: 'Chocolate Chip Cookies', 
+      brand: 'Chips Ahoy', 
+      score: 32, 
+      status: 'Poor', 
+      icon: '🍪', 
+      expiry: '2 days', 
+      expiryDate: 'May 14, 2026',
+      ingredients: 'Unbleached Enriched Flour, High Fructose Corn Syrup, Palm Oil, Sugar, Semisweet Chocolate Chips, Artificial Flavor.',
+      oils: 'Palm Oil',
+      sugar: '11g',
+      additives: ['High Fructose Corn Syrup', 'Artificial Flavor']
+    },
+    { 
+      name: 'Almond Butter', 
+      brand: 'Barney Butter', 
+      score: 92, 
+      status: 'Excellent', 
+      icon: '🥜', 
+      expiryDate: 'Jun 22, 2026',
+      ingredients: 'Blanched Roasted Almonds, Cane Sugar, Palm Fruit Oil, Sea Salt.',
+      oils: 'Palm Fruit Oil',
+      sugar: '3g',
+      additives: []
+    }
+  ]);
 
   const handleScan = (item) => {
-    setScannedItem(item);
+    // Merge full technical data if missing (simulating database lookup)
+    const enrichedItem = {
+      ...item,
+      id: Date.now(),
+      expiryDate: new Date(Date.now() + 1000*60*60*24*30).toLocaleDateString(), // Default 30 days
+      ingredients: item.ingredients || 'Detailed ingredients from barcode database...',
+      nutrition: { cal: '120', fat: '8g', sugar: item.sugar || '2g' }
+    };
+    setScannedItem(enrichedItem);
+  };
+
+  const addToPantry = (item) => {
+    setPantryItems([item, ...pantryItems]);
+    setScannedItem(null);
+    setCurrentScreen('pantry');
   };
 
   return (
@@ -756,10 +804,8 @@ const App = () => {
             {scannedItem && (
               <AuditCard 
                 item={scannedItem} 
-                onDismiss={() => {
-                  setScannedItem(null);
-                  setCurrentScreen('dashboard');
-                }} 
+                onDismiss={() => setScannedItem(null)}
+                onAdd={addToPantry}
               />
             )}
           </AnimatePresence>
