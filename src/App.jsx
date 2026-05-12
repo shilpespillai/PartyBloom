@@ -1626,6 +1626,12 @@ const App = () => {
     // Cloud Save (Scoped to User)
     try {
       await setDoc(doc(db, "users", user.uid, "pantry", item.id.toString()), item);
+      
+      // Also update History to reflect the "Finalized" name/brand if edited manually
+      await setDoc(doc(db, "users", user.uid, "history", item.id.toString()), {
+        ...item,
+        scannedAt: item.scannedAt || Date.now()
+      });
     } catch (e) {
       console.warn("Cloud save failed.");
     }
