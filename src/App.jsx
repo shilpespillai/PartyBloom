@@ -836,6 +836,12 @@ const Scanner = ({ onScan }) => {
         console.error("Camera error:", err);
       }
     }
+    // Mock recognition loop
+    fInt = setInterval(() => {
+      if (!isScanning) return;
+      setIsDetected(prev => !prev);
+    }, 800);
+
     startCamera();
     return () => {
       isScanning = false;
@@ -852,13 +858,21 @@ const Scanner = ({ onScan }) => {
       <video 
         ref={videoRef} 
         autoPlay 
+        muted
         playsInline 
         className="absolute inset-0 w-full h-full object-cover contrast-[1.1]"
       />
       
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {/* Clean Rectangular Frame */}
-        <div className={`w-[85%] h-44 border-4 rounded-[2rem] relative overflow-hidden transition-all duration-300 ${isDetected ? 'border-sage' : 'border-white/20'}`}>
+        {/* Clean Rectangular Frame with Pulsating Heartbeat */}
+        <motion.div 
+          animate={{ 
+            scale: isDetected ? [1, 1.02, 1] : 1,
+            borderColor: isDetected ? '#5D6D3F' : 'rgba(255,255,255,0.2)' 
+          }}
+          transition={{ duration: 0.5, repeat: isDetected ? Infinity : 0 }}
+          className="w-[85%] h-44 border-4 rounded-[2rem] relative overflow-hidden transition-all duration-300"
+        >
           <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
           
           {/* Corner Brackets */}
@@ -866,7 +880,7 @@ const Scanner = ({ onScan }) => {
           <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-white/40 rounded-tr-lg" />
           <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-white/40 rounded-bl-lg" />
           <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-white/40 rounded-br-lg" />
-        </div>
+        </motion.div>
       </div>
 
       <div className="absolute top-10 left-6 right-6 flex justify-between items-center text-white">
