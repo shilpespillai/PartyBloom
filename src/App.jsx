@@ -386,33 +386,100 @@ const Stats = ({ onSelectCategory }) => (
   </motion.div>
 );
 
-const Scanner = ({ onScan }) => (
-  <div className="relative w-full h-full bg-black">
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="w-64 h-64 border-2 border-white/50 rounded-[3rem] relative">
-        <motion.div 
-          animate={{ y: [0, 256, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-full h-0.5 bg-sage shadow-[0_0_15px_#5D6D3F] absolute" 
-        />
+const Scanner = ({ onScan }) => {
+  const videoRef = React.useRef(null);
+  const [hasCamera, setHasCamera] = React.useState(false);
+
+  useEffect(() => {
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          setHasCamera(true);
+        }
+
+        // Real-time Barcode Detection (if supported)
+        if ('BarcodeDetector' in window) {
+          const detector = new BarcodeDetector({ formats: ['ean_13', 'upc_a'] });
+          const interval = setInterval(async () => {
+            if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+              try {
+                const barcodes = await detector.detect(videoRef.current);
+                if (barcodes.length > 0) {
+                  clearInterval(interval);
+                  // Simulate an audit for any scanned barcode
+                  onScan({ 
+                    name: 'Scanned Product', 
+                    brand: 'Local Pantry', 
+                    nova: 3, 
+                    oils: 'Healthy', 
+                    sugar: 'Low', 
+                    score: 82 
+                  });
+                }
+              } catch (e) { /* ignore */ }
+            }
+          }, 500);
+          return () => clearInterval(interval);
+        }
+      } catch (err) {
+        console.error("Camera error:", err);
+      }
+    }
+    startCamera();
+    return () => {
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, []);
+
+  return (
+    <div className="relative w-full h-full bg-black overflow-hidden">
+      {/* Real Camera Feed */}
+      <video 
+        ref={videoRef} 
+        autoPlay 
+        playsInline 
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-64 h-64 border-2 border-white/50 rounded-[3rem] relative overflow-hidden">
+          <motion.div 
+            animate={{ y: [0, 256, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-full h-1 bg-sage shadow-[0_0_15px_#5D6D3F] absolute z-10" 
+          />
+          {/* Scanning Overlay Grid */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(93,109,63,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
+        </div>
+      </div>
+
+      <div className="absolute top-10 left-6 right-6 flex justify-between items-center text-white">
+        <h3 className="text-xl font-bold drop-shadow-md">Auditor Scan</h3>
+        <button className="p-2 bg-white/10 rounded-full backdrop-blur-md"><Settings className="w-5 h-5" /></button>
+      </div>
+
+      <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center gap-6">
+        <p className="text-white/80 text-xs font-bold uppercase tracking-widest drop-shadow-md">
+          {hasCamera ? 'Point at a barcode to audit' : 'Requesting camera...'}
+        </p>
+        
+        {/* Shutter Button (Manual Override) */}
+        <button 
+          onClick={() => onScan({ name: 'Hellmann\'s Mayo', nova: 4, oils: 'Inflammatory', sugar: 'Hidden', score: 32 })}
+          className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-8 border-white/20 active:scale-95 transition-all shadow-2xl"
+        >
+          <div className="w-12 h-12 bg-stone-800 rounded-full" />
+        </button>
       </div>
     </div>
-    <div className="absolute top-10 left-6 right-6 flex justify-between items-center text-white">
-      <h3 className="text-xl font-bold">Auditor Scan</h3>
-      <button className="p-2 bg-white/10 rounded-full backdrop-blur-md"><Settings className="w-5 h-5" /></button>
-    </div>
-    <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center gap-6">
-      <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Center barcode to audit</p>
-      <button 
-        onClick={() => onScan({ name: 'Hellmann\'s Mayo', nova: 4, oils: 'Inflammatory', sugar: 'Hidden', score: 32 })}
-        className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-8 border-white/20 active:scale-95 transition-all shadow-2xl"
-      >
-        <div className="w-12 h-12 bg-stone-800 rounded-full" />
-      </button>
-      <button className="text-white/40 text-[10px] font-bold uppercase tracking-widest underline decoration-white/20">Can't scan? Enter manually</button>
-    </div>
-  </div>
-);
+  );
+};
 
 const MarketMapScreen = ({ onBack }) => {
   const markets = [
@@ -445,10 +512,10 @@ const MarketMapScreen = ({ onBack }) => {
            </svg>
            
            {/* Current Location Pulsar */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
              <motion.div 
-               animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }} 
-               transition={{ duration: 2, repeat: Infinity }}
+               animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.1, 0.3] }} 
+               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                className="absolute w-12 h-12 bg-sage rounded-full" 
              />
              <div className="relative w-4 h-4 bg-sage rounded-full border-2 border-white shadow-lg" />
@@ -488,7 +555,12 @@ const MarketMapScreen = ({ onBack }) => {
             </div>
             <div className="text-right">
               <p className="text-xs font-bold text-stone-800">{market.distance}</p>
-              <button className="text-[10px] font-bold text-sage underline mt-1">Get Directions</button>
+              <button 
+                onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(market.name + ' ' + market.location)}`, '_blank')}
+                className="text-[10px] font-bold text-sage underline mt-1"
+              >
+                Get Directions
+              </button>
             </div>
           </div>
         ))}
@@ -617,7 +689,10 @@ const App = () => {
           {/* Market Finder Overlay */}
           <AnimatePresence>
             {showMarket && (
-              <MarketMapScreen onBack={() => setShowMarket(false)} />
+              <MarketMapScreen 
+                key="market-finder-overlay"
+                onBack={() => setShowMarket(false)} 
+              />
             )}
           </AnimatePresence>
 
