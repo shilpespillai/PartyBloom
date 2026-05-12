@@ -3,14 +3,14 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
-// REPLACE THESE with your actual keys from the Firebase Console!
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "pantry-bloom.firebaseapp.com",
-  projectId: "pantry-bloom",
-  storageBucket: "pantry-bloom.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBsW3KhUinSuxr4Y3dbIVXWazyC9DeVOiU",
+  authDomain: "pantrybloom-a7237.firebaseapp.com",
+  projectId: "pantrybloom-a7237",
+  storageBucket: "pantrybloom-a7237.firebasestorage.app",
+  messagingSenderId: "59696142465",
+  appId: "1:59696142465:web:a4477f72294ed2afc05580",
+  measurementId: "G-KFJNDWBGM1"
 };
 
 // Initialize Firebase
