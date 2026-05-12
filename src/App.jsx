@@ -67,13 +67,14 @@ const LivelyTree = ({ healthScore }) => {
 
 const AuditCard = ({ item, onDismiss }) => {
   const [manualDate, setManualDate] = useState('');
+  const [viewDetails, setViewDetails] = useState(false);
 
   return (
     <motion.div 
       initial={{ y: 300 }}
       animate={{ y: 0 }}
       exit={{ y: 600 }}
-      className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[3rem] p-8 shadow-2xl z-[60]"
+      className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[3rem] p-8 shadow-2xl z-[60] max-h-[90vh] overflow-y-auto custom-scrollbar"
     >
       <div className="w-12 h-1.5 bg-stone-100 rounded-full mx-auto mb-6" />
       
@@ -81,47 +82,85 @@ const AuditCard = ({ item, onDismiss }) => {
         <div>
           <h2 className="text-2xl font-bold mb-1">{item.name}</h2>
           <span className={`audit-tag ${item.score > 70 ? 'tag-clean' : 'tag-processed'}`}>
-            NOVA Scale: {item.nova}
+            NOVA {item.nova} • {item.score > 70 ? 'Minimally Processed' : 'Ultra Processed'}
           </span>
         </div>
         <button onClick={onDismiss} className="p-2 bg-stone-50 rounded-full"><X className="w-5 h-5 text-stone-400" /></button>
       </div>
 
-      <div className="space-y-4 mb-6">
-        <div className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${item.oils === 'Healthy' ? 'bg-sage/10 text-sage' : 'bg-terracotta/10 text-terracotta'}`}>
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-stone-400 uppercase tracking-tighter">Oil Audit</p>
-              <p className="font-semibold text-sm">{item.oils} Fats Found</p>
-            </div>
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="p-4 bg-stone-50 rounded-2xl flex items-center gap-3">
+          <Leaf className="w-5 h-5 text-sage" />
+          <div>
+            <p className="text-[10px] font-bold text-stone-400 uppercase">Fats</p>
+            <p className="font-bold text-xs">{item.oils}</p>
           </div>
         </div>
-
-        {/* Manual Date Entry */}
-        <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
-           <p className="text-[10px] font-bold text-stone-400 uppercase mb-2">Expiry Date (Optional)</p>
-           <div className="flex items-center gap-2">
-             <Timer className="w-4 h-4 text-stone-400" />
-             <input 
-               type="date" 
-               value={manualDate}
-               onChange={(e) => setManualDate(e.target.value)}
-               className="bg-transparent text-sm font-bold text-stone-800 outline-none w-full"
-               placeholder="Set expiry date"
-             />
-           </div>
+        <div className="p-4 bg-stone-50 rounded-2xl flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-terracotta" />
+          <div>
+            <p className="text-[10px] font-bold text-stone-400 uppercase">Sugar</p>
+            <p className="font-bold text-xs">{item.sugar} Added</p>
+          </div>
         </div>
       </div>
 
+      {/* Technical Data Toggle */}
+      <div className="border-t border-stone-100 pt-6 mb-8">
+        <button 
+          onClick={() => setViewDetails(!viewDetails)}
+          className="w-full flex justify-between items-center text-xs font-bold text-stone-400 uppercase tracking-widest mb-4"
+        >
+          Full Barcode Information <ChevronRight className={`w-4 h-4 transition-transform ${viewDetails ? 'rotate-90' : ''}`} />
+        </button>
+
+        <AnimatePresence>
+          {viewDetails && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="space-y-4 overflow-hidden"
+            >
+              <div className="p-4 bg-cream/50 rounded-2xl">
+                <p className="text-[10px] font-bold text-stone-400 mb-2">INGREDIENTS</p>
+                <p className="text-xs leading-relaxed text-stone-600">
+                  {item.ingredients || 'Filtered Water, Soybean Oil, Sugar, Distilled Vinegar, Modified Corn Starch, Egg Yolks, Salt, Natural Flavors, Calcium Disodium EDTA.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { l: 'Calories', v: '90' },
+                  { l: 'Protein', v: '0.2g' },
+                  { l: 'Carbs', v: '3.1g' }
+                ].map(d => (
+                  <div key={d.l} className="p-3 border border-stone-100 rounded-xl text-center">
+                    <p className="text-[8px] font-bold text-stone-300 uppercase">{d.l}</p>
+                    <p className="text-xs font-bold">{d.v}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-4 bg-terracotta/5 rounded-2xl border border-terracotta/10">
+                <p className="text-[10px] font-bold text-terracotta mb-2">ADDITIVES FOUND</p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-white rounded-lg text-[9px] font-bold text-stone-600 shadow-sm border border-stone-100">E385 (EDTA)</span>
+                  <span className="px-2 py-1 bg-white rounded-lg text-[9px] font-bold text-stone-600 shadow-sm border border-stone-100">Modified Starch</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       <div className="bg-sage/5 border border-sage/10 rounded-3xl p-5 mb-8">
-        <p className="text-xs font-bold text-sage uppercase mb-3 tracking-widest">Swap Recommendation</p>
+        <p className="text-xs font-bold text-sage uppercase mb-3 tracking-widest">Better Alternative</p>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold text-stone-800 text-sm">Primal Kitchen Mayo</p>
-            <p className="text-[10px] text-stone-400">Avocado Oil Based • No Seed Oils</p>
+            <p className="font-bold text-stone-800 text-sm">Chosen Foods Mayo</p>
+            <p className="text-[10px] text-stone-400 font-bold uppercase">100% Pure Avocado Oil</p>
           </div>
           <button className="text-sage font-bold text-xs flex items-center gap-1">
             Shop <ChevronRight className="w-4 h-4" />
@@ -129,7 +168,18 @@ const AuditCard = ({ item, onDismiss }) => {
         </div>
       </div>
 
-      <button onClick={onDismiss} className="wooden-btn w-full py-4">Add to Pantry</button>
+      <div className="space-y-3">
+        <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex items-center gap-3">
+          <Timer className="w-4 h-4 text-stone-400" />
+          <input 
+            type="date" 
+            value={manualDate}
+            onChange={(e) => setManualDate(e.target.value)}
+            className="bg-transparent text-sm font-bold text-stone-800 outline-none w-full"
+          />
+        </div>
+        <button onClick={onDismiss} className="wooden-btn w-full py-4 shadow-xl">Add to Pantry</button>
+      </div>
     </motion.div>
   );
 };
@@ -394,7 +444,12 @@ const Scanner = ({ onScan }) => {
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            advanced: [{ focusMode: 'continuous' }]
+          } 
         });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
