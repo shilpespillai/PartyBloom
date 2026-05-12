@@ -19,7 +19,8 @@ import {
   UserPlus,
   Cloud,
   Trash2,
-  MapPin
+  MapPin,
+  BarChart3
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { db, auth } from './firebase';
@@ -1158,23 +1159,23 @@ const App = () => {
         </div>
 
         {/* Tab Bar */}
-        <nav className="absolute bottom-0 left-0 right-0 h-24 bg-white border-t border-stone-100 flex items-center justify-around z-50">
+        <nav className="absolute bottom-0 left-0 right-0 h-24 bg-white border-t border-stone-100 flex items-center justify-around z-50 px-4">
           {[
-            { id: 'dashboard', icon: '🏠', label: 'Home' },
-            { id: 'history', icon: '🕒', label: 'History' },
-            { id: 'stats', icon: '📊', label: 'Stats' },
-            { id: 'scanner', icon: '📷', label: 'Scan' },
-            { id: 'pantry', icon: '🧺', label: 'Pantry' },
+            { id: 'dashboard', icon: <Home className="w-5 h-5" />, label: 'Home' },
+            { id: 'history', icon: <History className="w-5 h-5" />, label: 'History' },
+            { id: 'scanner', icon: <Scan className="w-7 h-7" />, label: 'Scan', primary: true },
+            { id: 'pantry', icon: <Refrigerator className="w-5 h-5" />, label: 'Pantry' },
+            { id: 'stats', icon: <BarChart3 className="w-5 h-5" />, label: 'Stats' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setCurrentScreen(tab.id)}
-              className="flex flex-col items-center gap-1 p-2 transition-all duration-300"
+              className="flex flex-col items-center gap-1 p-2 relative"
             >
-              <div className={`text-2xl transition-transform duration-300 ${currentScreen === tab.id ? 'scale-125' : 'grayscale opacity-50'}`}>
+              <div className={`transition-all duration-300 ${tab.primary ? 'p-4 bg-sage text-white rounded-full -mt-12 shadow-lg shadow-sage/30' : (currentScreen === tab.id ? 'text-sage scale-110' : 'text-stone-300')}`}>
                 {tab.icon}
               </div>
-              <span className={`text-[10px] font-bold ${currentScreen === tab.id ? 'text-sage' : 'text-stone-300'}`}>
+              <span className={`text-[10px] font-bold mt-1 ${tab.primary ? 'text-sage' : (currentScreen === tab.id ? 'text-sage' : 'text-stone-300')}`}>
                 {tab.label}
               </span>
             </button>
