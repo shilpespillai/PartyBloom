@@ -446,36 +446,46 @@ const Scanner = ({ onScan }) => {
   const [hasCamera, setHasCamera] = React.useState(false);
 
   useEffect(() => {
+    let stream = null;
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
+        stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            advanced: [{ focusMode: 'continuous' }]
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30 }
           } 
         });
+        
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           setHasCamera(true);
+
+          // Attempt to enable Continuous Autofocus if supported
+          const track = stream.getVideoTracks()[0];
+          const capabilities = track.getCapabilities?.() || {};
+          if (capabilities.focusMode?.includes('continuous')) {
+            await track.applyConstraints({
+              advanced: [{ focusMode: 'continuous' }]
+            });
+          }
         }
 
-        // Real-time Barcode Detection (if supported)
+        // Real-time Barcode Detection
         if ('BarcodeDetector' in window) {
-          const detector = new BarcodeDetector({ formats: ['ean_13', 'upc_a'] });
+          const detector = new BarcodeDetector({ formats: ['ean_13', 'upc_a', 'code_128'] });
           const interval = setInterval(async () => {
             if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
               try {
                 const barcodes = await detector.detect(videoRef.current);
                 if (barcodes.length > 0) {
                   clearInterval(interval);
-                  // Pass the actual scanned barcode ID to the lookup engine
                   onScan(barcodes[0].rawValue);
                 }
               } catch (e) { /* ignore */ }
             }
-          }, 500);
+          }, 300);
           return () => clearInterval(interval);
         }
       } catch (err) {
@@ -484,14 +494,31 @@ const Scanner = ({ onScan }) => {
     }
     startCamera();
     return () => {
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
       }
     };
   }, []);
 
+  const triggerFocus = async () => {
+    // Manual focus pulse for browsers that support it
+    if (videoRef.current?.srcObject) {
+      const track = videoRef.current.srcObject.getVideoTracks()[0];
+      const capabilities = track.getCapabilities?.() || {};
+      if (capabilities.focusMode?.includes('single-shot')) {
+        try {
+          await track.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] });
+          // Re-enable continuous after a brief moment
+          setTimeout(() => {
+             track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+          }, 500);
+        } catch (e) { console.warn("Manual focus failed"); }
+      }
+    }
+  };
+
   return (
-    <div className="relative w-full h-full bg-black overflow-hidden">
+    <div className="relative w-full h-full bg-black overflow-hidden" onClick={triggerFocus}>
       {/* Real Camera Feed */}
       <video 
         ref={videoRef} 
@@ -499,6 +526,11 @@ const Scanner = ({ onScan }) => {
         playsInline 
         className="absolute inset-0 w-full h-full object-cover"
       />
+      
+      {/* Tap to Focus Hint */}
+      <div className="absolute top-1/4 left-0 right-0 text-center pointer-events-none opacity-40">
+        <p className="text-[10px] text-white font-bold uppercase tracking-widest">Tap to Focus</p>
+      </div>
 
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-64 h-64 border-2 border-white/50 rounded-[3rem] relative overflow-hidden">
