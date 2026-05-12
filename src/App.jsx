@@ -21,7 +21,9 @@ import {
   Trash2,
   MapPin,
   BarChart3,
-  Barcode
+  Barcode,
+  LayoutGrid,
+  List as ListIcon
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { db, auth } from './firebase';
@@ -927,6 +929,7 @@ const MarketMapScreen = ({ onBack }) => {
 
 const Pantry = ({ items, onItemClick }) => {
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   
   const filtered = items.filter(i => 
     i.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -942,41 +945,59 @@ const Pantry = ({ items, onItemClick }) => {
       animate={{ opacity: 1 }} 
       className="px-6 py-8 pb-32 bg-[#FDFCF7]"
     >
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-serif-luxury text-stone-800">My Pantry</h1>
-          <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-1">Managed Inventory</p>
+          <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-1">{filtered.length} Items Indexed</p>
         </div>
-        <button 
-          onClick={onItemClick ? () => onItemClick({ isNew: true, name: '', brand: '', score: 75, icon: '📦' }) : null}
-          className="w-12 h-12 bg-sage text-white rounded-2xl shadow-lg flex items-center justify-center active:scale-90 transition-transform"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="bg-stone-100 p-1 rounded-xl flex gap-1">
+            <button 
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-sage' : 'text-stone-400'}`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-sage' : 'text-stone-400'}`}
+            >
+              <ListIcon className="w-4 h-4" />
+            </button>
+          </div>
+          <button 
+            onClick={onItemClick ? () => onItemClick({ isNew: true, name: '', brand: '', score: 75, icon: '📦' }) : null}
+            className="w-10 h-10 bg-sage text-white rounded-xl shadow-lg flex items-center justify-center active:scale-90 transition-transform"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
-      <div className="relative mb-10">
+      <div className="relative mb-8">
         <input 
           type="text"
-          placeholder="Search your pantry..."
+          placeholder="Search items..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-white border border-stone-100 rounded-2xl py-4 px-6 text-sm shadow-sm outline-none focus:border-sage transition-all pl-12"
+          className="w-full bg-white border border-stone-100 rounded-2xl py-3.5 px-6 text-sm shadow-sm outline-none focus:border-sage transition-all pl-12"
         />
         <Leaf className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300" />
       </div>
 
       {/* Optimal Selection */}
       {goodItems.length > 0 && (
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-6 px-1">
-            <h2 className="text-sm font-bold text-stone-800 uppercase tracking-widest">Optimal Selection</h2>
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-4 px-1">
+            <h2 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Optimal Selection</h2>
             <div className="h-px flex-1 bg-stone-100" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className={viewMode === 'grid' ? "grid grid-cols-2 gap-4" : "space-y-3"}>
             {goodItems.map((item, idx) => (
-              <PantryCard key={idx} item={item} onClick={() => onItemClick({ ...item, inPantry: true })} />
+              viewMode === 'grid' ? 
+                <PantryCard key={idx} item={item} onClick={() => onItemClick({ ...item, inPantry: true })} /> :
+                <PantryListItem key={idx} item={item} onClick={() => onItemClick({ ...item, inPantry: true })} />
             ))}
           </div>
         </div>
@@ -984,14 +1005,16 @@ const Pantry = ({ items, onItemClick }) => {
 
       {/* Audit Required */}
       {badItems.length > 0 && (
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-6 px-1">
-            <h2 className="text-sm font-bold text-terracotta uppercase tracking-widest">Audit Required</h2>
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-4 px-1">
+            <h2 className="text-[10px] font-bold text-terracotta uppercase tracking-widest">Audit Required</h2>
             <div className="h-px flex-1 bg-stone-100" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className={viewMode === 'grid' ? "grid grid-cols-2 gap-4" : "space-y-3"}>
             {badItems.map((item, idx) => (
-              <PantryCard key={idx} item={item} onClick={() => onItemClick({ ...item, inPantry: true })} />
+              viewMode === 'grid' ? 
+                <PantryCard key={idx} item={item} onClick={() => onItemClick({ ...item, inPantry: true })} /> :
+                <PantryListItem key={idx} item={item} onClick={() => onItemClick({ ...item, inPantry: true })} />
             ))}
           </div>
         </div>
@@ -1003,6 +1026,46 @@ const Pantry = ({ items, onItemClick }) => {
           <p className="font-bold">No items found</p>
         </div>
       )}
+    </motion.div>
+  );
+};
+
+const PantryListItem = ({ item, onClick }) => {
+  const d = new Date(item.expiryDate);
+  const days = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+  const isExpiring = days <= 7;
+
+  return (
+    <motion.div 
+      onClick={onClick}
+      className="bg-white p-3 rounded-2xl border border-stone-100 shadow-sm flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all"
+    >
+      <div className="w-12 h-12 rounded-xl bg-stone-50 overflow-hidden flex items-center justify-center flex-shrink-0">
+        {item.image ? (
+          <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+        ) : (
+          <span className="text-2xl">{item.icon}</span>
+        )}
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start">
+          <p className="text-[11px] font-bold text-stone-800 truncate">{item.name}</p>
+          <span className={`text-[10px] font-bold ${item.score > 70 ? 'text-sage' : item.score > 40 ? 'text-wood' : 'text-terracotta'}`}>
+            {item.score}
+          </span>
+        </div>
+        <p className="text-[8px] text-stone-400 font-bold uppercase tracking-tighter mt-0.5">{item.brand}</p>
+        
+        <div className="mt-2 flex items-center gap-3">
+          <div className="flex-1 h-1 bg-stone-50 rounded-full overflow-hidden">
+            <div className={`h-full ${item.score > 70 ? 'bg-sage' : item.score > 40 ? 'bg-wood' : 'bg-terracotta'}`} style={{ width: `${item.score}%` }} />
+          </div>
+          <span className={`text-[8px] font-bold uppercase ${isExpiring ? 'text-red-500' : 'text-stone-300'}`}>
+            {isExpiring ? 'Expiring' : item.expiryDate}
+          </span>
+        </div>
+      </div>
     </motion.div>
   );
 };
