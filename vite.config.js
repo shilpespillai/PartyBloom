@@ -10,6 +10,19 @@ export default defineConfig({
   ],
   server: {
     host: true,
-    allowedHosts: 'all'
+    port: 5200,
+    allowedHosts: 'all',
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    }
+  },
+  optimizeDeps: {
+    include: ['react-is', 'recharts'],
+    exclude: ['@capacitor/app', '@capacitor-mlkit/barcode-scanning']
+  },
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/]
+    }
   }
 })
