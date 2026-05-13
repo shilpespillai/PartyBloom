@@ -1,0 +1,12 @@
+{
+  "appId": "com.pantrybloom.app",
+  "appName": "PantryBloom",
+  "webDir": "dist",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "59696142465-41rmfbb93g15e7luf6fsrro718lnfpq9.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": false
+    }
+  }
+}
