@@ -8,6 +8,8 @@ import {
   Leaf, 
   AlertCircle, 
   CheckCircle2, 
+  XCircle,
+  Bell,
   ChevronRight, 
   Plus, 
   History,
@@ -57,6 +59,9 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import guestBear from './assets/guest_bear.png';
 import logo from './assets/logo.png';
+import textLogo from './assets/text_logo.png';
+import authHero from './assets/auth_hero.jpg';
+import logoOfficial from './assets/logo_official.png';
 
 // --- Components ---
 
@@ -291,37 +296,47 @@ const LivelyTree = ({ healthScore, isEmpty }) => {
   const budColor = '#FDFCF7';
 
   const bloomPositions = [
-    { cx: 60, cy: 32 }, { cx: 45, cy: 45 }, { cx: 75, cy: 45 },
-    { cx: 55, cy: 55 }, { cx: 72, cy: 58 }, { cx: 62, cy: 20 },
-    { cx: 38, cy: 58 }, { cx: 88, cy: 52 }, { cx: 50, cy: 28 },
-    { cx: 74, cy: 30 }, { cx: 42, cy: 38 }, { cx: 82, cy: 38 },
-    { cx: 65, cy: 48 }, { cx: 52, cy: 68 }, { cx: 72, cy: 68 }
+    { cx: 60, cy: 30 }, { cx: 48, cy: 40 }, { cx: 72, cy: 40 },
+    { cx: 55, cy: 52 }, { cx: 65, cy: 52 }, { cx: 42, cy: 48 },
+    { cx: 78, cy: 48 }, { cx: 60, cy: 20 }, { cx: 50, cy: 28 },
+    { cx: 70, cy: 28 }
   ];
 
   const totalPotential = 15;
   const targetBloomCount = isEmpty ? 0 : Math.floor(healthScore / 6.6);
   
-  // Logic: 
-  // If healthy: everything on tree.
-  // If junk: some stay withered, most fall.
-  const onTreeCount = isHealthy ? targetBloomCount : Math.min(3, targetBloomCount);
-  const onGroundCount = isHealthy ? 0 : Math.max(0, targetBloomCount - onTreeCount);
+  // Refined Distribution for Mid-Range (Match Reference 60 Score)
+  let onTreeCount, onGroundCount;
+  if (isHealthy) {
+    onTreeCount = targetBloomCount;
+    onGroundCount = 0;
+  } else if (isFair) {
+    onTreeCount = Math.floor(targetBloomCount / 2);
+    onGroundCount = targetBloomCount - onTreeCount;
+  } else {
+    onTreeCount = Math.min(2, targetBloomCount);
+    onGroundCount = targetBloomCount - onTreeCount;
+  }
 
   return (
     <div className="relative w-80 h-80 flex items-center justify-center">
-      <svg viewBox="0 0 120 120" className="w-full h-full drop-shadow-2xl">
-        <ellipse cx="60" cy="105" rx="42" ry="8" fill="#E8EDE0" />
-        <rect x="56" y="75" width="8" height="30" rx="2" fill="#7D5A44" />
+      <svg viewBox="0 0 120 120" className="w-full h-full drop-shadow-xl">
+        {/* Ground Shadow */}
+        <ellipse cx="60" cy="102" rx="45" ry="10" fill="#E8EDE0" opacity="0.6" />
+        
+        {/* Trunk */}
+        <rect x="57" y="75" width="6" height="30" rx="1" fill="#7D5A44" />
         
         <motion.g
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.5, type: "spring" }}
         >
-          <circle cx="60" cy="55" r="32" fill={canopyColor} opacity="0.9" className="transition-colors duration-1000" />
-          <circle cx="45" cy="52" r="24" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
-          <circle cx="75" cy="52" r="24" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
-          <circle cx="60" cy="40" r="22" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
+          {/* Symmetrical Canopy */}
+          <circle cx="60" cy="50" r="30" fill={canopyColor} opacity="0.9" className="transition-colors duration-1000" />
+          <circle cx="45" cy="50" r="22" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
+          <circle cx="75" cy="50" r="22" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
+          <circle cx="60" cy="38" r="22" fill={canopyColor} opacity="0.8" className="transition-colors duration-1000" />
           
           <AnimatePresence>
             {/* Flowers on Tree */}
@@ -335,43 +350,42 @@ const LivelyTree = ({ healthScore, isEmpty }) => {
               />
             ))}
             
-            {/* Flowers on Ground */}
-            {bloomPositions.slice(onTreeCount, onTreeCount + onGroundCount).map((pos, i) => (
-              <Flower 
-                key={`ground-${i}`} 
-                cx={40 + (i * 8)} // Scatter on ground
-                cy={105 + (i % 2 * 2)} 
-                color={witheredColor} 
-                delay={i * 0.1 + 0.2} 
-                isFallen={true}
-              />
-            ))}
+            {/* Clustered Flowers on Ground (Match Reference) */}
+            {bloomPositions.slice(onTreeCount, onTreeCount + onGroundCount).map((pos, i) => {
+               const groundOffsets = [
+                 { x: -15, y: 0 }, { x: -8, y: 3 }, { x: 0, y: 5 }, 
+                 { x: 8, y: 3 }, { x: 15, y: 0 }, { x: -22, y: -2 }, 
+                 { x: 22, y: -2 }, { x: -5, y: -2 }, { x: 5, y: -2 }
+               ];
+               const offset = groundOffsets[i % groundOffsets.length];
+               return (
+                <Flower 
+                  key={`ground-${i}`} 
+                  cx={60 + offset.x} 
+                  cy={102 + offset.y} 
+                  color={witheredColor} 
+                  delay={i * 0.1 + 0.2} 
+                  isFallen={true}
+                />
+               );
+            })}
           </AnimatePresence>
         </motion.g>
       </svg>
       
-      {/* Dynamic Health Badge */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="absolute -top-4 -right-4 bg-white px-4 py-2 rounded-2xl shadow-xl border border-stone-100 flex items-center gap-2"
-      >
-        <div className={`w-3 h-3 rounded-full ${isHealthy ? 'bg-sage' : 'bg-terracotta'} animate-pulse`} />
-        <span className="text-[10px] font-black text-stone-800 uppercase tracking-widest">{isHealthy ? 'Blooming' : 'Peckish'}</span>
-      </motion.div>
     </div>
   );
 };
 
 const AuthScreen = ({ onGoogleSignIn, onContinueGuest }) => (
-  <div className="absolute inset-0 bg-[#FDFCF7] z-[500] flex flex-col items-center justify-center px-10 text-center" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-    <div className="mb-12">
-      <div className="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 shadow-[0_8px_30px_rgba(0,0,0,0.05)] overflow-hidden border border-stone-50">
-        <img src={logo} alt="PantryBloom Logo" className="w-full h-full object-cover scale-110" />
-      </div>
-      <h1 className="text-4xl font-serif-luxury text-stone-800 mb-4 tracking-tight">PantryBloom</h1>
-      <p className="text-stone-400 text-sm font-medium leading-relaxed">
-        Join the ecosystem to track your health, <br/> reduce waste, and never lose your progress.
+  <div className="absolute inset-0 bg-[#FDFCF7] z-[500] flex flex-col items-center justify-center px-10 text-center">
+    <div className="w-64 h-64 flex items-center justify-center mb-12 overflow-hidden relative mt-12 rounded-full border border-stone-100 shadow-xl bg-white p-4">
+      <img src={authHero} alt="PantryBloom Logo" className="w-full h-full object-contain scale-110" />
+    </div>
+    
+    <div className="px-10 mb-8">
+      <p className="text-stone-400 text-sm font-medium leading-relaxed px-4">
+        Join the ecosystem to track the items you eat, <br/> eliminate toxins, and bloom with health.
       </p>
     </div>
 
@@ -386,7 +400,7 @@ const AuthScreen = ({ onGoogleSignIn, onContinueGuest }) => (
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
         </svg>
-        <span className="text-sm font-bold text-stone-700">Continue with Google</span>
+        <span className="text-sm font-bold text-stone-500">Continue with Google</span>
       </button>
 
       <button 
@@ -973,7 +987,8 @@ const FilteredListView = ({ title, filter, items, onBack }) => {
 
     if (filter === 'clean') return getScoreInfo(item.score).category === 'clean';
     if (filter === 'junky') return getScoreInfo(item.score).category === 'poor' || getScoreInfo(item.score).category === 'fair';
-    if (filter === 'expiring') return days <= 7;
+    if (filter === 'expired') return days <= 0;
+    if (filter === 'expiring') return days > 0 && days <= 7;
     if (filter === 'week') return days <= 7;
     if (filter === 'month') return days <= 30;
     if (filter === 'year') return true;
@@ -1035,77 +1050,63 @@ const Dashboard = ({ stats, user, onSelectCategory, onShowMarket, setShowAuth, s
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
-      className=""
+      className="bg-white min-h-screen"
     >
-      <div className="px-6 pb-6 border-b border-stone-50 bg-white/40 flex justify-between items-center backdrop-blur-md" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 2rem)' }}>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className={`w-14 h-14 rounded-[1.6rem] overflow-hidden bg-white border-2 border-white shadow-xl transition-all duration-700 ${!user?.isAnonymous ? 'ring-4 ring-sage/10' : ''}`}>
-              <img src={user?.photoURL || guestBear} alt="Profile" className="w-full h-full object-cover" />
-            </div>
-            {!user?.isAnonymous && (
-              <motion.div 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -bottom-1 -right-1 bg-sage text-white p-1 rounded-full border-2 border-[#FDFCF7] shadow-lg"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-              </motion.div>
-            )}
+
+      {/* Sleek Single-Line Header - Pure White */}
+      <div className="px-6 py-6 backdrop-blur-md flex justify-between items-center border-b border-stone-50" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)', backgroundColor: '#FFFFFF' }}>
+        {/* Left: Profile & Greeting */}
+        <div className="flex items-center gap-3 flex-1">
+          <div className={`w-10 h-10 rounded-xl overflow-hidden bg-white border-2 border-white shadow-md transition-all duration-700 ${!user?.isAnonymous ? 'ring-2 ring-sage/10' : ''}`}>
+            <img src={user?.photoURL || guestBear} alt="Profile" className="w-full h-full object-cover" />
           </div>
-          <div>
-            <h1 className="text-3xl font-serif-luxury leading-none tracking-tight bg-gradient-to-br from-stone-800 to-stone-500 bg-clip-text text-transparent">
-              Bonjour, {(user?.displayName?.split(' ')[0] || 'Seeker').charAt(0).toUpperCase() + (user?.displayName?.split(' ')[0] || 'Seeker').slice(1).toLowerCase()}
-            </h1>
-            <div className="flex items-center gap-2 mt-1.5">
-              <div className={`w-1.5 h-1.5 rounded-full ${user?.isAnonymous ? 'bg-stone-300' : 'bg-sage animate-pulse'}`} />
-              <p className="text-[9px] font-black text-sage/80 uppercase tracking-[0.25em]">
-                {user?.isAnonymous ? 'Guest Seeker' : 'Secured Resident'}
-              </p>
-            </div>
+          <div className="hidden min-[380px]:block">
+            <p className="text-[7px] font-bold text-stone-400 uppercase tracking-widest leading-none mb-1">Good Day,</p>
+            <h2 className="text-xs font-serif-luxury leading-none tracking-tight text-stone-800">
+              {(user?.displayName?.split(' ')[0] || 'Seeker').charAt(0).toUpperCase() + (user?.displayName?.split(' ')[0] || 'Seeker').slice(1).toLowerCase()}
+            </h2>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {(!user || user.isAnonymous) && (
-            <button 
-              onClick={() => setShowAuth(true)}
-              className="p-2.5 bg-terracotta/10 text-terracotta rounded-xl hover:bg-terracotta/20 transition-all shadow-sm group"
-              title="Secure Account"
-            >
-              <UserPlus className="w-5 h-5 group-active:scale-90 transition-transform" />
-            </button>
-          )}
+
+        {/* Center: Official Branding Banner (Bleached to White) */}
+        <div className="flex-[4] flex justify-center px-4 overflow-hidden">
+          <img 
+            src={logoOfficial} 
+            alt="PantryBloom" 
+            className="h-16 w-full object-contain scale-110 translate-y-4" 
+            style={{ 
+              filter: 'brightness(1.08) contrast(1.08) saturate(1.1)',
+              mixBlendMode: 'multiply'
+            }} 
+          />
+        </div>
+
+        {/* Right: Utilities */}
+        <div className="flex items-center gap-2 flex-1 justify-end">
           <button 
             onClick={onShowMarket}
-            className="p-2.5 bg-wood/10 text-wood-dark rounded-xl hover:bg-wood/20 transition-all shadow-sm group"
+            className="p-2 bg-white text-wood-dark rounded-lg hover:bg-stone-50 transition-all shadow-sm"
             title="Local Market"
           >
-            <MapPin className="w-5 h-5 group-active:scale-90 transition-transform" />
+            <MapPin className="w-4 h-4" />
           </button>
           {user && !user.isAnonymous && (
             <button 
               onClick={() => {
-                // Fire and forget logout
                 signOut(auth).catch(e => console.error(e));
-                if (Capacitor.isNativePlatform()) {
-                  GoogleAuth.signOut().catch(e => console.warn(e));
-                }
-                
-                // Direct UI Reset
-                setUser(null);
-                setShowAuth(true);
-                setCurrentScreen('dashboard');
+                if (Capacitor.isNativePlatform()) GoogleAuth.signOut().catch(e => console.warn(e));
+                setUser(null); setShowAuth(true); setCurrentScreen('dashboard');
               }}
-              className="p-2.5 bg-stone-50 text-stone-400 rounded-xl hover:bg-stone-100 transition-all shadow-sm group"
+              className="p-2 bg-white text-stone-400 rounded-lg hover:bg-stone-50 transition-all shadow-sm"
               title="Log Out"
             >
-              <LogOut className="w-5 h-5 group-active:scale-90 transition-transform" />
+              <LogOut className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col items-center pt-2 pb-6 bg-cream">
+      <div className="flex flex-col items-center pt-2 pb-6 bg-white">
         <LivelyTree healthScore={healthScore} isEmpty={isEmpty} />
         <div className="text-center mt-2">
           <motion.h3 
@@ -1129,43 +1130,18 @@ const Dashboard = ({ stats, user, onSelectCategory, onShowMarket, setShowAuth, s
         </div>
       </div>
 
-      {/* Use Soon Carousel (Expiry Guard) */}
-      {stats.expiringCount > 0 && (
-        <div className="mt-4 px-6">
-          <div className="flex items-center justify-between mb-4">
-             <h4 className="text-[10px] font-black text-terracotta uppercase tracking-[0.2em]">Use Soon Alert</h4>
-             <span className="text-[8px] bg-terracotta text-white px-2 py-0.5 rounded-full font-bold uppercase">Expiring</span>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar no-scrollbar">
-            {stats.expiringItems.map((item, idx) => (
-              <motion.div 
-                key={idx}
-                onClick={() => onSelectCategory('expiring', 'Expiring Soon')}
-                className="w-32 flex-shrink-0 bg-white p-3 rounded-2xl border border-terracotta/10 shadow-sm active:scale-95 transition-all"
-              >
-                <div className="w-full aspect-square rounded-xl bg-stone-50 mb-2 overflow-hidden">
-                  {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xl">{item.icon}</div>}
-                </div>
-                <p className="text-[10px] font-bold text-stone-800 truncate">{item.name}</p>
-                <p className="text-[8px] text-terracotta font-black uppercase mt-1">2 Days Left</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="px-6 grid grid-cols-3 gap-2 mt-2 mb-4">
       <button onClick={() => onSelectCategory('clean', 'Clean Food')} className="bg-white p-2.5 rounded-[1.5rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
         <div className="w-9 h-9 mb-1">
            <ResponsiveContainer width="100%" height="100%">
              <PieChart>
-               <Pie data={[{value: cleanPercent}, {value: 100 - cleanPercent}]} innerRadius={10} outerRadius={16} dataKey="value">
+               <Pie data={[{value: stats.cleanPercent}, {value: 100 - stats.cleanPercent}]} innerRadius={10} outerRadius={16} dataKey="value">
                  <Cell fill="#5D6D3F" /><Cell fill="#f5f5f4" />
                </Pie>
              </PieChart>
            </ResponsiveContainer>
         </div>
-        <p className="text-xl font-black text-sage">{cleanPercent}%</p>
+        <p className="text-xl font-black text-sage">{stats.cleanPercent}%</p>
         <p className="text-[7px] text-stone-400 uppercase font-black tracking-widest mt-0.5">Clean Gems</p>
       </button>
       
@@ -1173,26 +1149,104 @@ const Dashboard = ({ stats, user, onSelectCategory, onShowMarket, setShowAuth, s
         <div className="w-9 h-9 mb-1">
            <ResponsiveContainer width="100%" height="100%">
              <PieChart>
-               <Pie data={[{value: junkyPercent}, {value: 100 - junkyPercent}]} innerRadius={10} outerRadius={16} dataKey="value">
+               <Pie data={[{value: stats.junkyPercent}, {value: 100 - stats.junkyPercent}]} innerRadius={10} outerRadius={16} dataKey="value">
                  <Cell fill="#D27D56" /><Cell fill="#f5f5f4" />
                </Pie>
              </PieChart>
            </ResponsiveContainer>
         </div>
-        <p className="text-xl font-black text-terracotta">{junkyPercent}%</p>
+        <p className="text-xl font-black text-terracotta">{stats.junkyPercent}%</p>
         <p className="text-[7px] text-terracotta/60 uppercase font-black tracking-widest mt-0.5">Junk Vault</p>
       </button>
  
       <button onClick={() => onSelectCategory('expiring', 'Expiring Soon')} className="bg-white p-2.5 rounded-[1.5rem] border border-stone-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
-        <div className={expiringCount > 0 ? 'animate-bounce' : ''}>
-          <Timer className={`w-6 h-6 mb-2 ${expiringCount > 0 ? 'text-red-500' : 'text-terracotta'}`} />
+        <div className={stats.expiringCount > 0 ? 'animate-bounce' : ''}>
+          <Timer className={`w-6 h-6 mb-2 ${stats.expiringCount > 0 ? 'text-red-500' : 'text-terracotta'}`} />
         </div>
-        <p className="text-base font-bold text-stone-800">{expiringCount}</p>
+        <p className="text-base font-bold text-stone-800">{stats.expiringCount}</p>
         <p className="text-[7px] text-stone-400 uppercase font-bold tracking-widest mt-0.5">Expiring</p>
       </button>
-    </div>
+      </div>
 
-  </motion.div>
+      {/* Expired Items Panel */}
+      {stats.expiredCount > 0 && (
+        <div className="px-6 mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-terracotta font-bold text-base">Expired</h3>
+            <button onClick={() => onSelectCategory('expired', 'Expired Items')} className="text-stone-400 font-bold text-xs uppercase tracking-widest">View all</button>
+          </div>
+          
+          <div className="space-y-3">
+            {stats.expiredItems.slice(0, 3).map((item, idx) => (
+              <div 
+                key={idx}
+                className="bg-white p-3 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-terracotta/20 flex items-center gap-4"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-terracotta/5 overflow-hidden flex-shrink-0 grayscale">
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-2xl">{item.icon || '📦'}</div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-stone-800 text-sm">{item.name}</p>
+                  <p className="text-[10px] text-terracotta font-bold">Past Expiry Date</p>
+                </div>
+                <div className="px-3 py-1 bg-terracotta/10 text-terracotta text-[10px] font-bold rounded-full">
+                  Expired
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Expiring Soon Vertical List (High-Fidelity) */}
+      <div className="px-6 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-orange-500 font-bold text-base">Expiring Soon</h3>
+          <button onClick={() => onSelectCategory('expiring', 'Expiring Soon')} className="text-stone-400 font-bold text-xs uppercase tracking-widest">View all</button>
+        </div>
+        
+        <div className="space-y-3">
+          {stats.expiringItems.slice(0, 3).map((item, idx) => (
+            <motion.div 
+              key={idx}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="bg-white p-3 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-50 flex items-center gap-4"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-stone-50 overflow-hidden flex-shrink-0">
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-2xl">{item.icon || '📦'}</div>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-stone-800 text-sm">{item.name}</p>
+                <p className="text-[10px] text-orange-400 font-bold">Expires in {item.expiry || '3 days'}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-orange-50 text-orange-500 text-[10px] font-bold rounded-full">
+                  {item.expiry || '3 days'}
+                </span>
+              </div>
+            </motion.div>
+          ))}
+          
+          {stats.expiringCount === 0 && (
+            <div className="py-12 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-dashed border-stone-200">
+              <CheckCircle2 className="w-10 h-10 text-sage mb-2 opacity-20" />
+              <p className="text-stone-300 font-bold text-xs uppercase tracking-widest">Your pantry is fresh</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+    </motion.div>
   );
 };
 
@@ -1867,7 +1921,8 @@ const Pantry = ({ items, onItemClick }) => {
 const PantryListItem = ({ item, onClick }) => {
   const d = new Date(item.expiryDate);
   const days = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
-  const isExpiring = days <= 7;
+  const isExpired = days <= 0;
+  const isExpiring = days > 0 && days <= 7;
 
   return (
     <motion.div 
@@ -1895,8 +1950,8 @@ const PantryListItem = ({ item, onClick }) => {
           <div className="flex-1 h-1 bg-stone-50 rounded-full overflow-hidden">
             <div className={`h-full ${getScoreInfo(item.score).category === 'clean' ? 'bg-sage' : getScoreInfo(item.score).category === 'fair' ? 'bg-wood' : 'bg-terracotta'}`} style={{ width: `${item.score}%` }} />
           </div>
-          <span className={`text-[8px] font-bold uppercase ${isExpiring ? 'text-red-500' : 'text-stone-300'}`}>
-            {isExpiring ? 'Expiring' : item.expiryDate}
+          <span className={`text-[8px] font-bold uppercase ${isExpired ? 'text-terracotta' : isExpiring ? 'text-orange-500' : 'text-stone-300'}`}>
+            {isExpired ? 'Expired' : isExpiring ? 'Expiring' : item.expiryDate}
           </span>
         </div>
       </div>
@@ -1907,7 +1962,8 @@ const PantryListItem = ({ item, onClick }) => {
 const PantryCard = ({ item, onClick }) => {
   const d = new Date(item.expiryDate);
   const days = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
-  const isExpiring = days <= 7;
+  const isExpired = days <= 0;
+  const isExpiring = days > 0 && days <= 7;
 
   return (
     <motion.div 
@@ -1915,8 +1971,8 @@ const PantryCard = ({ item, onClick }) => {
       onClick={onClick}
       className="bg-white p-3 rounded-[2rem] border border-stone-100 shadow-sm flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all relative group"
     >
-      {isExpiring && (
-        <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+      {(isExpiring || isExpired) && (
+        <div className={`absolute top-3 right-3 w-2 h-2 ${isExpired ? 'bg-terracotta' : 'bg-orange-500'} rounded-full animate-pulse shadow-lg`} />
       )}
       
       <div className="w-full aspect-square mb-3 rounded-2xl bg-stone-50 overflow-hidden flex items-center justify-center relative group-hover:bg-cream transition-colors">
@@ -1936,8 +1992,8 @@ const PantryCard = ({ item, onClick }) => {
       <div className="mt-3 flex items-center gap-1.5">
          <span className={`text-[9px] font-bold ${getScoreInfo(item.score).textColor}`}>Score: {item.score}</span>
          <div className="w-1 h-1 rounded-full bg-stone-200" />
-         <span className={`text-[8px] font-bold ${isExpiring ? 'text-red-500' : 'text-stone-300'}`}>
-           {isExpiring ? 'Expiring' : 'In Date'}
+         <span className={`text-[8px] font-bold ${isExpired ? 'text-terracotta' : isExpiring ? 'text-orange-500' : 'text-stone-300'}`}>
+           {isExpired ? 'Expired' : isExpiring ? 'Expiring' : 'In Date'}
          </span>
       </div>
     </motion.div>
@@ -1995,7 +2051,8 @@ const App = () => {
       return Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
     };
     
-    const expiringWeek = pantryItems.filter(i => getDays(i.expiryDate) <= 7);
+    const expired = pantryItems.filter(i => getDays(i.expiryDate) <= 0);
+    const expiringSoon = pantryItems.filter(i => getDays(i.expiryDate) > 0 && getDays(i.expiryDate) <= 7);
     const expiringMonth = pantryItems.filter(i => getDays(i.expiryDate) <= 30);
     const scoreSum = pantryItems.reduce((acc, i) => acc + (i.score || 0), 0);
     
@@ -2004,10 +2061,15 @@ const App = () => {
       totalCount: pantryItems.length,
       cleanPercent: Math.round((clean.length / total) * 100),
       junkyPercent: Math.round(((poor.length + fair.length) / total) * 100),
-      expiringCount: expiringWeek.length,
-      expiringItems: expiringWeek.slice(0, 5),
-      weekCount: expiringWeek.length,
+      expiredCount: expired.length,
+      expiredItems: expired.slice(0, 5),
+      expiringCount: expiringSoon.length,
+      expiringItems: expiringSoon.slice(0, 5),
+      weekCount: expiringSoon.length,
       monthCount: expiringMonth.length,
+      cleanItems: clean,
+      poorItems: poor,
+      fairItems: fair,
       distData: [
         { name: 'Good', value: clean.length, color: '#5D6D3F' },
         { name: 'Fair', value: fair.length, color: '#A67B5B' },
