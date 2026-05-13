@@ -416,7 +416,7 @@ const AuthScreen = ({ onGoogleSignIn, onContinueGuest }) => (
   </div>
 );
 
-const AuditCard = ({ item, dynamicAlternatives, isSearchingAlternatives, currentPantryScore, onDismiss, onAdd, onDelete, onShowMarket }) => {
+const AuditCard = ({ item, viewMode = 'add', dynamicAlternatives, isSearchingAlternatives, currentPantryScore, onDismiss, onAdd, onDelete, onShowMarket }) => {
   const [manualDate, setManualDate] = useState(item.expiryDate || '');
   const [activeTab, setActiveTab] = useState('impact');
   const [isSaving, setIsSaving] = useState(false);
@@ -537,7 +537,7 @@ const AuditCard = ({ item, dynamicAlternatives, isSearchingAlternatives, current
 
   const handleDateChange = (newDate) => {
     setManualDate(newDate);
-    if (item.id && !item.isNew) onAdd({ ...item, expiryDate: newDate });
+    if (item.id && !item.isNew && viewMode === 'update') onAdd({ ...item, expiryDate: newDate });
   };
 
   const handleAdd = () => {
@@ -625,7 +625,7 @@ const AuditCard = ({ item, dynamicAlternatives, isSearchingAlternatives, current
       </div>
 
       <AnimatePresence mode="wait">
-        {(item.isNew || activeTab === 'impact') && (
+        {viewMode !== 'readonly' && (item.isNew || activeTab === 'impact') && (
           <motion.div 
             key={item.isNew ? 'manual' : 'impact'}
             initial={{ opacity: 0, x: -10 }}
@@ -908,16 +908,23 @@ const AuditCard = ({ item, dynamicAlternatives, isSearchingAlternatives, current
         <div className="flex justify-between items-center px-4">
           <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Expiry Date</p>
         </div>
-        <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all ${!manualDate ? 'bg-red-50/50 border-red-200' : 'bg-stone-50 border-stone-100'}`}>
-          <Timer className={`w-4 h-4 ${!manualDate ? 'text-red-400' : 'text-stone-400'}`} />
-          <input 
-            type="date" 
-            value={manualDate}
-            onChange={(e) => handleDateChange(e.target.value)}
-            className="bg-transparent text-sm font-bold text-stone-800 outline-none w-full"
-          />
-        </div>
-        {!manualDate && (
+        {viewMode === 'readonly' ? (
+          <div className="p-4 rounded-2xl border border-stone-100 bg-stone-50 flex items-center gap-3">
+            <Timer className="w-4 h-4 text-stone-400" />
+            <p className="text-sm font-bold text-stone-800">{item.expiryDate || 'No Expiry Set'}</p>
+          </div>
+        ) : (
+          <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all ${!manualDate ? 'bg-red-50/50 border-red-200' : 'bg-stone-50 border-stone-100'}`}>
+            <Timer className={`w-4 h-4 ${!manualDate ? 'text-red-400' : 'text-stone-400'}`} />
+            <input 
+              type="date" 
+              value={manualDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+              className="bg-transparent text-sm font-bold text-stone-800 outline-none w-full"
+            />
+          </div>
+        )}
+        {viewMode === 'add' && !manualDate && (
           <motion.p 
             initial={{ opacity: 0, y: -5 }} 
             animate={{ opacity: 1, y: 0 }}
@@ -927,45 +934,47 @@ const AuditCard = ({ item, dynamicAlternatives, isSearchingAlternatives, current
           </motion.p>
         )}
         
-        <div className={item.inPantry ? "grid grid-cols-4 gap-3" : "w-full"}>
-          <button 
-            onClick={() => {
-              if (!manualDate) {
-                return;
-              }
-              handleAdd();
-            }} 
-            disabled={isSaving || !manualDate}
-            className={`${item.inPantry ? 'col-span-3' : 'w-full'} py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all flex flex-col items-center justify-center gap-1 ${
-              !manualDate ? 'bg-stone-100 text-stone-400 opacity-50 cursor-not-allowed' :
-              isSaving ? 'bg-[#65A30D] text-white scale-95' : 'bg-[#65A30D] text-white'
-            }`}
-          >
-            {isSaving ? '✅ Saved' : (
-              <>
-                <div className="flex items-center gap-2">
-                  <Scan className="w-4 h-4" /> 
-                  {item.inPantry ? 'Update Item' : 'Add to Pantry'}
-                </div>
-                {!manualDate && <span className="text-[8px] opacity-70">Expiry Required</span>}
-              </>
-            )}
-          </button>
-          
-          {item.inPantry && (
+        {viewMode !== 'readonly' && (
+          <div className={item.inPantry || viewMode === 'update' ? "grid grid-cols-4 gap-3" : "w-full"}>
             <button 
               onClick={() => {
-                if (window.confirm('Remove this item from your pantry?')) {
-                  onDelete(item.id);
-                  onDismiss();
+                if (!manualDate) {
+                  return;
                 }
-              }}
-              className="col-span-1 bg-red-50 text-red-400 rounded-3xl flex items-center justify-center hover:bg-red-100 transition-colors shadow-sm"
+                handleAdd();
+              }} 
+              disabled={isSaving || !manualDate}
+              className={`${(item.inPantry || viewMode === 'update') ? 'col-span-3' : 'w-full'} py-4 rounded-3xl font-bold uppercase tracking-widest text-xs shadow-xl transition-all flex flex-col items-center justify-center gap-1 ${
+                !manualDate ? 'bg-stone-100 text-stone-400 opacity-50 cursor-not-allowed' :
+                isSaving ? 'bg-[#65A30D] text-white scale-95' : 'bg-[#65A30D] text-white'
+              }`}
             >
-              <Trash2 className="w-6 h-6" />
+              {isSaving ? '✅ Saved' : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Scan className="w-4 h-4" /> 
+                    {viewMode === 'update' ? 'Update Pantry' : 'Add to Pantry'}
+                  </div>
+                  {!manualDate && <span className="text-[8px] opacity-70">Expiry Required</span>}
+                </>
+              )}
             </button>
-          )}
-        </div>
+            
+            {(item.inPantry || viewMode === 'update') && (
+              <button 
+                onClick={() => {
+                  if (window.confirm('Remove this item from your pantry?')) {
+                    onDelete(item.id);
+                    onDismiss();
+                  }
+                }}
+                className="col-span-1 bg-red-50 text-red-400 rounded-3xl flex items-center justify-center hover:bg-red-100 transition-colors shadow-sm"
+              >
+                <Trash2 className="w-6 h-6" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </motion.div>
   </motion.div>
@@ -2593,6 +2602,10 @@ const App = () => {
             {scannedItem && (
               <AuditCard 
                 item={scannedItem} 
+                viewMode={
+                  currentScreen === 'history' ? 'readonly' : 
+                  (pantryItems.find(p => p.barcode === scannedItem.barcode) || pantryItems.find(p => p.id === scannedItem.id)) ? 'update' : 'add'
+                }
                 dynamicAlternatives={dynamicAlternatives}
                 isSearchingAlternatives={isSearchingAlternatives}
                 currentPantryScore={stats.healthScore}
