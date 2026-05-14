@@ -1,0 +1,207 @@
+:root {
+    --bg-color: #F9F9F7;
+    --panel-bg: #F7F5F0;
+    --accent-color: #65A30D;
+    --text-main: #292524;
+    --text-muted: #78716c;
+    --border-color: #e7e5e4;
+    --shadow: 0 10px 30px rgba(0,0,0,0.03);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+header {
+    background-color: rgba(249, 249, 247, 0.8);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 0;
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    items-center: center;
+    gap: 12px;
+}
+
+.logo img {
+    height: 32px;
+    width: auto;
+}
+
+.logo h1 {
+    font-size: 18px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+nav {
+    display: flex;
+    gap: 25px;
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: var(--accent-color);
+}
+
+main {
+    padding: 80px 0;
+}
+
+#hero {
+    text-align: center;
+    margin-bottom: 100px;
+}
+
+.display-font {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--accent-color);
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+.last-updated {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+}
+
+.legal-content {
+    margin-bottom: 80px;
+}
+
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    padding: 50px;
+    shadow: var(--shadow);
+}
+
+.card h3 {
+    font-size: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    color: var(--accent-color);
+}
+
+.card h3:first-child {
+    margin-top: 0;
+}
+
+.card p {
+    margin-bottom: 20px;
+    color: #444;
+}
+
+.card ul {
+    list-style: none;
+    margin-bottom: 20px;
+}
+
+.card ul li {
+    margin-bottom: 10px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.card ul li::before {
+    content: "•";
+    color: var(--accent-color);
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+}
+
+footer {
+    padding: 60px 0;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+footer p {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.boutique-tag {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 10px;
+    opacity: 0.5;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 0 25px;
+    }
+    .display-font {
+        font-size: 40px;
+    }
+    nav {
+        display: none;
+    }
+    .card {
+        padding: 30px;
+    }
+}
